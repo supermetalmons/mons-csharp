@@ -5,6 +5,8 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonsGame", "MonsGame\MonsGame.csproj", "{F416DEBE-B09B-489D-9735-6AA8C072F76D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonsGame.Tests", "MonsGame.Tests\MonsGame.Tests.csproj", "{ABC86912-3E7F-4E45-B43E-C6E4C8FB2877}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{F416DEBE-B09B-489D-9735-6AA8C072F76D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F416DEBE-B09B-489D-9735-6AA8C072F76D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F416DEBE-B09B-489D-9735-6AA8C072F76D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABC86912-3E7F-4E45-B43E-C6E4C8FB2877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABC86912-3E7F-4E45-B43E-C6E4C8FB2877}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABC86912-3E7F-4E45-B43E-C6E4C8FB2877}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABC86912-3E7F-4E45-B43E-C6E4C8FB2877}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
