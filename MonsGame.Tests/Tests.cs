@@ -6,16 +6,6 @@ using MonsGame;
 public class MonsGameTests
 {
     [Fact]
-    public void TestFeatureX()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
     public void ConsumableEnumShouldSerializeAndDeserializeCorrectly()
     {
         // Arrange
