@@ -1,6 +1,7 @@
-﻿namespace MonsGame;
+﻿// ∅ 2024 super-metal-mons
 
-using System;
+namespace MonsGame;
+
 using System.Text.Json.Serialization;
 
 [JsonConverter(typeof(JsonStringEnumConverter))] // This ensures the enum is serialized as a string
