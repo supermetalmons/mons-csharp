@@ -61,5 +61,55 @@ public class Board
             return baseLocation.Key;
         }
     }
+    
+    public IEnumerable<Location> AllMonsLocations(Color color)
+    {
+        return _items.Where(pair => pair.Value.Type == ItemType.Mon && pair.Value.Mon.color == color)
+                     .Select(pair => pair.Key);
+    }
+
+    public IEnumerable<Location> AllFreeRegularManaLocations(Color color)
+    {
+        return _items.Where(pair => pair.Value.Type == ItemType.Mana && pair.Value.Mana.Type == ManaType.Regular && pair.Value.Mana.Color == color)
+                     .Select(pair => pair.Key);
+    }
+
+    public Location Base(Mon mon)
+    {
+        var baseLocation = Config.Squares
+            .FirstOrDefault(pair => pair.Value.Type == SquareType.MonBase && 
+                                    pair.Value.Color == mon.color && 
+                                    pair.Value.Kind == mon.kind);
+
+        if (baseLocation.Equals(default(KeyValuePair<Location, Square>)))
+        {
+            throw new InvalidOperationException("Mon base not found.");
+        }
+
+        return baseLocation.Key;
+    }
+
+    public IEnumerable<Location> FaintedMonsLocations(Color color)
+    {
+        return _items.Where(pair => (pair.Value.Type == ItemType.Mon || pair.Value.Type == ItemType.MonWithMana || pair.Value.Type == ItemType.MonWithConsumable) && 
+                                    pair.Value.Mon.color == color && 
+                                    pair.Value.Mon.isFainted)
+                     .Select(pair => pair.Key);
+    }
+
+    public Location? FindMana(Color color)
+    {
+        var locationWithItem = _items.FirstOrDefault(pair => pair.Value.Type == ItemType.Mana && pair.Value.Mana.Type == ManaType.Regular && pair.Value.Mana.Color == color);
+        return locationWithItem.Key.Equals(default(Location)) ? null : locationWithItem.Key;
+    }
+
+    public Location? FindAwakeAngel(Color color)
+    {
+        var locationWithItem = _items.FirstOrDefault(pair => (pair.Value.Type == ItemType.Mon || pair.Value.Type == ItemType.MonWithConsumable) && 
+                                                             pair.Value.Mon.color == color && 
+                                                             pair.Value.Mon.kind == Mon.Kind.Angel && 
+                                                             !pair.Value.Mon.isFainted);
+        return locationWithItem.Key.Equals(default(Location)) ? null : locationWithItem.Key;
+    }
 
 }

@@ -71,4 +71,5 @@ public static class Config
     public static readonly HashSet<Location> MonsBases = new HashSet<Location>(
         Squares.Where(kv => kv.Value.Type == SquareType.MonBase).Select(kv => kv.Key)
     );
+
 }

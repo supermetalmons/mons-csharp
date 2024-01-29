@@ -29,4 +29,36 @@ public class BoardTests
         Assert.Contains(new Location(0, 5), monBaseLocations);
     }
 
+    [Fact]
+    public void FindMana_WithInitialBoard_ReturnsLocationForWhite()
+    {
+        var board = new Board();
+        var location = board.FindMana(Color.White);
+        Assert.NotNull(location);
+    }
+
+    [Fact]
+    public void FindMana_WithInitialBoard_ReturnsLocationForBlack()
+    {
+        var board = new Board();
+        var location = board.FindMana(Color.Black);
+        Assert.NotNull(location);
+    }
+
+    [Fact]
+    public void FindAwakeAngel_WithInitialBoard_ReturnsLocationForWhite()
+    {
+        var board = new Board();
+        var location = board.FindAwakeAngel(Color.White);
+        Assert.NotNull(location);
+    }
+
+    [Fact]
+    public void FindAwakeAngel_WithInitialBoard_ReturnsLocationForBlack()
+    {
+        var board = new Board();
+        var location = board.FindAwakeAngel(Color.Black);
+        Assert.NotNull(location);
+    }
+
 }
