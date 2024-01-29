@@ -25,7 +25,7 @@ public class GameTests
     [Fact]
     public void ParameterizedConstructor_InitializesPropertiesCorrectly()
     {
-        var board = new Board(); // Assuming a default constructor for Board
+        var board = new Board();
         var game = new Game(board, 3, 5, Color.Black, 2, 1, 4, 1, 2, 6);
 
         Assert.Equal(board, game.Board);

@@ -20,7 +20,7 @@ public class ItemTests
     [Fact]
     public void ManaItem_CreatesManaItemCorrectly()
     {
-        var mana = Mana.Regular(Color.Black); // Assuming these enums and structs are defined
+        var mana = Mana.Regular(Color.Black);
         var item = Item.ManaItem(mana);
 
         Assert.Equal(ItemType.Mana, item.Type);
@@ -28,8 +28,6 @@ public class ItemTests
         Assert.Equal(mana, item.Mana);
         Assert.Equal(default(Consumable), item.Consumable);
     }
-
-    // Similar tests for MonWithManaItem, MonWithConsumableItem, and ConsumableItem
 
     [Fact]
     public void MonProperty_ReturnsMonForMonItem()
