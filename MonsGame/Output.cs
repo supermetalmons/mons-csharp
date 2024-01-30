@@ -11,7 +11,7 @@ public abstract class Output
 
 public class InvalidInputOutput : Output
 {
-    // Specific functionality for InvalidInput, if needed.
+
 }
 
 public class LocationsToStartFromOutput : Output, IEquatable<LocationsToStartFromOutput>

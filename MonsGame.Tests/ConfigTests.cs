@@ -19,7 +19,7 @@ public class ConfigTests
     [Fact]
     public void MonsBases_ContainsCorrectLocations()
     {
-        Assert.Equal(10, Config.MonsBases.Count); // 5 for each color
+        Assert.Equal(10, Config.MonsBases.Count);
         Assert.Contains(new Location(0, 3), Config.MonsBases);
         Assert.Contains(new Location(10, 7), Config.MonsBases);
     }

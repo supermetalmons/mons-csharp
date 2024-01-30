@@ -7,7 +7,7 @@ using System.Linq;
 
 public struct Location : IEquatable<Location>
 {
-    private static readonly Range ValidRange = 0..Config.BoardSize; // Assuming Config.BoardSize is defined elsewhere
+    private static readonly Range ValidRange = 0..Config.BoardSize;
 
     public int I { get; }
     public int J { get; }

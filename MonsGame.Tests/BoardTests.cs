@@ -17,7 +17,7 @@ public class BoardTests
     {
         var board = new Board();
         var location = new Location(4, 4);
-        var expectedSquare = Square.Regular; // Or other Square type based on your test setup
+        var expectedSquare = Square.Regular;
         Assert.Equal(expectedSquare, board.SquareAt(location));
     }
 

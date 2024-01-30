@@ -21,7 +21,6 @@ public class ColorTests
             colors.Add(ColorExtensions.RandomColor());
         }
 
-        // Check if all colors are present
         Assert.Contains(Color.Black, colors);
         Assert.Contains(Color.White, colors);
     }

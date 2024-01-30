@@ -14,7 +14,7 @@ public struct Mon : IEquatable<Mon>
     }
 
     public Kind kind { get; private set; }
-    public Color color { get; private set; } // Assuming Color is defined elsewhere
+    public Color color { get; private set; }
 
     private int _cooldown;
     public int cooldown 

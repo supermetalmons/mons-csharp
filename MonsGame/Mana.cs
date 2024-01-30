@@ -11,7 +11,7 @@ public enum ManaType
 public struct Mana : IEquatable<Mana>
 {
     public ManaType Type { get; private set; }
-    public Color Color { get; private set; } // Assuming Color is defined elsewhere
+    public Color Color { get; private set; }
 
     private Mana(ManaType type, Color color)
     {

@@ -333,7 +333,7 @@ public static class BoardExtensions
                     {
                         throw new ArgumentException("Invalid FEN string for Board.");
                     }
-                    j += 3; // Skip over 'n' and two digits
+                    j += 3;
                 }
                 else
                 {

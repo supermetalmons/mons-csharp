@@ -19,8 +19,6 @@ public class LocationTests
         Assert.Equal(j, location.J);
     }
 
-    // Additional tests for NearbyLocations, ReachableByBomb, ReachableByMysticAction, etc.
-
     [Fact]
     public void LocationBetween_CalculatesCorrectMidpoint()
     {
@@ -74,5 +72,4 @@ public class LocationTests
         Assert.Equal(location1.GetHashCode(), location2.GetHashCode());
     }
 
-    // Additional tests can be written for the validation of specific reachable and nearby location methods.
 }

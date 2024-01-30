@@ -8,7 +8,7 @@ public class ItemTests
     [Fact]
     public void MonItem_CreatesMonItemCorrectly()
     {
-        var mon = new Mon(Mon.Kind.Demon, Color.White); // Assuming these enums and structs are defined
+        var mon = new Mon(Mon.Kind.Demon, Color.White);
         var item = Item.MonItem(mon);
 
         Assert.Equal(ItemType.Mon, item.Type);
@@ -37,8 +37,6 @@ public class ItemTests
 
         Assert.Equal(mon, item.MonProperty);
     }
-
-    // Similar tests for ManaProperty and ConsumableProperty
 
     [Fact]
     public void Equals_ReturnsTrueForEqualItems()
