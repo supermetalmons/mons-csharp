@@ -2,6 +2,9 @@
 
 namespace MonsGame;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,8 +12,8 @@ public struct Location : IEquatable<Location>
 {
     private static readonly Range ValidRange = 0..Config.BoardSize;
 
-    public int I { get; }
-    public int J { get; }
+    public int I { get; set; }
+    public int J { get; set; }
 
     public Location(int i, int j)
     {
@@ -18,22 +21,27 @@ public struct Location : IEquatable<Location>
         J = j;
     }
 
+    [JsonIgnore]
     public IEnumerable<Location> NearbyLocations => GetNearbyLocations(1);
 
+    [JsonIgnore]
     public IEnumerable<Location> ReachableByBomb => GetNearbyLocations(3);
 
+    [JsonIgnore]
     public IEnumerable<Location> ReachableByMysticAction => new[]
     {
         (I - 2, J - 2), (I + 2, J + 2), (I - 2, J + 2), (I + 2, J - 2)
     }.Where(tuple => IsValidLocation(tuple.Item1, tuple.Item2))
       .Select(tuple => new Location(tuple.Item1, tuple.Item2));
 
+    [JsonIgnore]
     public IEnumerable<Location> ReachableByDemonAction => new[]
     {
         (I - 2, J), (I + 2, J), (I, J + 2), (I, J - 2)
     }.Where(tuple => IsValidLocation(tuple.Item1, tuple.Item2))
       .Select(tuple => new Location(tuple.Item1, tuple.Item2));
 
+    [JsonIgnore]
     public IEnumerable<Location> ReachableBySpiritAction
     {
         get

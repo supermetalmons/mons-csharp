@@ -60,6 +60,10 @@ public class TestDataTests
 
             RulesTestCase testCase = JsonSerializer.Deserialize<RulesTestCase>(jsonContent, JsonOptions.DefaultSerializerOptions)!;
 
+            string jsonBack = JsonSerializer.Serialize(testCase, JsonOptions.DefaultSerializerOptions)!;
+            RulesTestCase testCaseAgain = JsonSerializer.Deserialize<RulesTestCase>(jsonBack, JsonOptions.DefaultSerializerOptions)!;
+            string jsonBackBack = JsonSerializer.Serialize(testCaseAgain, JsonOptions.DefaultSerializerOptions)!;
+            Assert.Equal(jsonBackBack, jsonBack);
             var gameBefore = Game.FromFen(testCase.FenBefore);
             Assert.Equal(gameBefore.Fen, testCase.FenBefore);
 

@@ -1,7 +1,8 @@
 // ∅ 2024 super-metal-mons
 
-using System.Text.Json;
 using MonsGame;
+
+using System.Text.Json;
 
 public class InputTests
 {
@@ -38,6 +39,26 @@ public class InputTests
         var modifierInput = new Input.ModifierInput(Modifier.SelectPotion);
 
         Assert.Equal(Modifier.SelectPotion, modifierInput.Modifier);
+    }
+
+    [Fact]
+    public void LocationInput_Serialization_Deserialization_Test()
+    {
+        string json = "{\"location\":{\"_0\":{\"i\":1,\"j\":2}}}";
+        var deserializedInput = JsonSerializer.Deserialize<Input>(json, JsonOptions.DefaultSerializerOptions)!;
+        string jsonBack = JsonSerializer.Serialize(deserializedInput, JsonOptions.DefaultSerializerOptions)!;
+        var deserializedBackInput = JsonSerializer.Deserialize<Input>(jsonBack, JsonOptions.DefaultSerializerOptions)!;
+        Assert.Equal(json, jsonBack);        
+        Assert.Equal(deserializedBackInput, deserializedInput);        
+    }
+
+    [Fact]
+    public void ModifierInput_Serialization_Deserialization_Test()
+    {
+        string json = "{\"modifier\":{\"_0\":\"selectBomb\"}}";
+        var deserializedInput = JsonSerializer.Deserialize<Input>(json, JsonOptions.DefaultSerializerOptions)!;
+        string jsonBack = JsonSerializer.Serialize(deserializedInput, JsonOptions.DefaultSerializerOptions)!;
+        Assert.Equal(jsonBack, json);
     }
 
 }
