@@ -4,8 +4,30 @@ namespace MonsGame;
 
 public abstract class Event
 {
-    // Base class for all events
+    public enum EventType
+    {
+        MonMove,
+        ManaMove,
+        ManaScored,
+        MysticAction,
+        DemonAction,
+        DemonAdditionalStep,
+        SpiritTargetMove,
+        PickupBomb,
+        PickupPotion,
+        PickupMana,
+        MonFainted,
+        ManaDropped,
+        SupermanaBackToBase,
+        BombAttack,
+        MonAwake,
+        BombExplosion,
+        NextTurn,
+        GameOver
+    }
+    public EventType Type { get; protected set; }
 }
+
 public class MonMoveEvent : Event
 {
     public Item Item { get; }
@@ -17,6 +39,7 @@ public class MonMoveEvent : Event
         Item = item;
         From = from;
         To = to;
+        Type = EventType.MonMove;
     }
 }
 
@@ -31,6 +54,7 @@ public class ManaMoveEvent : Event
         Mana = mana;
         From = from;
         To = to;
+        Type = EventType.ManaMove;
     }
 }
 
@@ -43,6 +67,7 @@ public class ManaScoredEvent : Event
     {
         Mana = mana;
         At = at;
+        Type = EventType.ManaScored;
     }
 }
 
@@ -57,6 +82,7 @@ public class MysticActionEvent : Event
         Mystic = mystic;
         From = from;
         To = to;
+        Type = EventType.MysticAction;
     }
 }
 
@@ -71,6 +97,7 @@ public class DemonActionEvent : Event
         Demon = demon;
         From = from;
         To = to;
+        Type = EventType.DemonAction;
     }
 }
 
@@ -85,6 +112,7 @@ public class DemonAdditionalStepEvent : Event
         Demon = demon;
         From = from;
         To = to;
+        Type = EventType.DemonAdditionalStep;
     }
 }
 
@@ -99,6 +127,7 @@ public class SpiritTargetMoveEvent : Event
         Item = item;
         From = from;
         To = to;
+        Type = EventType.SpiritTargetMove;
     }
 }
 
@@ -111,6 +140,7 @@ public class PickupBombEvent : Event
     {
         By = by;
         At = at;
+        Type = EventType.PickupBomb;
     }
 }
 
@@ -123,6 +153,7 @@ public class PickupPotionEvent : Event
     {
         By = by;
         At = at;
+        Type = EventType.PickupPotion;
     }
 }
 
@@ -137,6 +168,7 @@ public class PickupManaEvent : Event
         Mana = mana;
         By = by;
         At = at;
+        Type = EventType.PickupMana;
     }
 }
 
@@ -151,6 +183,7 @@ public class MonFaintedEvent : Event
         Mon = mon;
         From = from;
         To = to;
+        Type = EventType.MonFainted;
     }
 }
 
@@ -163,6 +196,7 @@ public class ManaDroppedEvent : Event
     {
         Mana = mana;
         At = at;
+        Type = EventType.ManaDropped;
     }
 }
 
@@ -175,6 +209,7 @@ public class SupermanaBackToBaseEvent : Event
     {
         From = from;
         To = to;
+        Type = EventType.SupermanaBackToBase;
     }
 }
 
@@ -189,6 +224,7 @@ public class BombAttackEvent : Event
         By = by;
         From = from;
         To = to;
+        Type = EventType.BombAttack;
     }
 }
 
@@ -201,6 +237,7 @@ public class MonAwakeEvent : Event
     {
         Mon = mon;
         At = at;
+        Type = EventType.MonAwake;
     }
 }
 
@@ -211,6 +248,7 @@ public class BombExplosionEvent : Event
     public BombExplosionEvent(Location at)
     {
         At = at;
+        Type = EventType.BombExplosion;
     }
 }
 
@@ -221,6 +259,7 @@ public class NextTurnEvent : Event
     public NextTurnEvent(Color color)
     {
         Color = color;
+        Type = EventType.NextTurn;
     }
 }
 
@@ -231,5 +270,6 @@ public class GameOverEvent : Event
     public GameOverEvent(Color winner)
     {
         Winner = winner;
+        Type = EventType.GameOver;
     }
 }
