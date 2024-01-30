@@ -1,7 +1,7 @@
 // ∅ 2024 super-metal-mons
 
 namespace MonsGame;
-public class Game
+public partial class Game
 {
     public Board Board { get; private set; }
 

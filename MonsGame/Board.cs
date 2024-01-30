@@ -4,7 +4,7 @@ namespace MonsGame;
 
 using System.Collections.Generic;
 
-public class Board
+public partial class Board
 {
     private Dictionary<Location, Item> _items;
 
