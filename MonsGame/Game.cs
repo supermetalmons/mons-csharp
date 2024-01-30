@@ -23,7 +23,7 @@ public partial class Game
         Board = new Board();
         WhiteScore = 0;
         BlackScore = 0;
-        ActiveColor = Color.White; // Assuming Color.White is defined
+        ActiveColor = Color.White;
         ActionsUsedCount = 0;
         ManaMovesCount = 0;
         MonsMovesCount = 0;

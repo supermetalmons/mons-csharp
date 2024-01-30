@@ -30,6 +30,47 @@ public partial class Game : IFenRepresentable
         }
     }
 
+    public static Game FromFen(string fen)
+    {
+        var fields = fen.Split(' ');
+        if (fields.Length != 10)
+        {
+            throw new ArgumentException("Invalid FEN string for Game.");
+        }
+
+        if (!int.TryParse(fields[0], out int whiteScore) ||
+            !int.TryParse(fields[1], out int blackScore))
+        {
+            throw new ArgumentException("Invalid FEN string for Game: Invalid scores.");
+        }
+
+        var activeColor = ColorExtensions.FromFen(fields[2]);
+        if (!activeColor.HasValue)
+        {
+            throw new ArgumentException("Invalid FEN string for Game: Invalid color.");
+        }
+
+        if (!int.TryParse(fields[3], out int actionsUsedCount) ||
+            !int.TryParse(fields[4], out int manaMovesCount) ||
+            !int.TryParse(fields[5], out int monsMovesCount) ||
+            !int.TryParse(fields[6], out int whitePotionsCount) ||
+            !int.TryParse(fields[7], out int blackPotionsCount) ||
+            !int.TryParse(fields[8], out int turnNumber))
+        {
+            throw new ArgumentException("Invalid FEN string for Game: Invalid counts.");
+        }
+
+        var board = BoardExtensions.FromFen(fields[9]);
+        if (board == null)
+        {
+            throw new ArgumentException("Invalid FEN string for Game: Invalid board.");
+        }
+
+        return new Game(board, whiteScore, blackScore, activeColor.Value, actionsUsedCount,
+                        manaMovesCount, monsMovesCount, whitePotionsCount,
+                        blackPotionsCount, turnNumber);
+    }
+
 }
 
 public static class ConsumableExtensions
