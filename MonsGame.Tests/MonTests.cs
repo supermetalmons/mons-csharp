@@ -103,4 +103,28 @@ public class MonTests
 
         Assert.Equal(mon1.GetHashCode(), mon2.GetHashCode());
     }
+
+[Fact]
+    public void Deserialize_Mon_FromJson()
+    {
+        string json = "{\"color\":\"white\",\"cooldown\":0,\"kind\":\"mystic\"}";
+        var mon = JsonSerializer.Deserialize<Mon>(json);
+
+        Assert.Equal(Mon.Kind.Mystic, mon.kind);
+        Assert.Equal(Color.White, mon.color);
+        Assert.Equal(0, mon.cooldown);
+        Assert.False(mon.isFainted);
+    }
+
+    [Fact]
+    public void Serialize_Mon_ToJson()
+    {
+        var mon = new Mon(Mon.Kind.Mystic, Color.White, 2);
+        string json = JsonSerializer.Serialize(mon);
+        Assert.Equal("{\"color\":\"white\",\"cooldown\":2,\"kind\":\"mystic\"}", json);
+    }
+        
+        
+        
+
 }

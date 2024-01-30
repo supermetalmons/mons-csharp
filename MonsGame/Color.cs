@@ -2,10 +2,11 @@
 
 namespace MonsGame;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Linq;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(ColorJsonConverter))]
 public enum Color
 {
     White,
@@ -42,5 +43,19 @@ public static partial class ColorExtensions
         }
 
         throw new InvalidOperationException("Random value is not a valid Color.");
+    }
+}
+
+public class ColorJsonConverter : JsonConverter<Color>
+{
+    public override Color Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        string value = reader.GetString()!;
+        return Enum.TryParse<Color>(value, true, out var result) ? result : throw new JsonException($"Value '{value}' is not valid for enum type {nameof(Modifier)}.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, Color value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString().LowercaseFirst());
     }
 }

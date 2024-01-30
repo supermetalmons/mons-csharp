@@ -2,8 +2,12 @@
 
 namespace MonsGame;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 public struct Mon : IEquatable<Mon>
 {
+    [JsonConverter(typeof(MonKindJsonConverter))]
     public enum Kind
     {
         Demon,
@@ -13,16 +17,16 @@ public struct Mon : IEquatable<Mon>
         Mystic
     }
 
-    public Kind kind { get; private set; }
-    public Color color { get; private set; }
-
+    public Color color { get; set; }
     private int _cooldown;
     public int cooldown
     {
         get => _cooldown;
         private set => _cooldown = value;
     }
+    public Kind kind { get; set; }
 
+    [JsonIgnore]
     public bool isFainted => cooldown > 0;
 
     public Mon(Kind kind, Color color, int cooldown = 0)
@@ -68,5 +72,19 @@ public struct Mon : IEquatable<Mon>
     public static bool operator !=(Mon left, Mon right)
     {
         return !(left == right);
+    }
+}
+
+public class MonKindJsonConverter : JsonConverter<Mon.Kind>
+{
+    public override Mon.Kind Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        string value = reader.GetString()!;
+        return Enum.TryParse<Mon.Kind>(value, true, out var result) ? result : throw new JsonException($"Value '{value}' is not valid for enum type {nameof(Mon.Kind)}.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, Mon.Kind value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString().LowercaseFirst());
     }
 }

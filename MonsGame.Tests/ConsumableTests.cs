@@ -11,7 +11,7 @@ public class ConsumableTests
         var consumable = Consumable.Bomb;
         var serialized = JsonSerializer.Serialize(consumable);
         var deserialized = JsonSerializer.Deserialize<Consumable>(serialized);
-        Assert.Equal("\"Bomb\"", serialized);
+        Assert.Equal("\"bomb\"", serialized);
         Assert.Equal(Consumable.Bomb, deserialized);
     }
 }
