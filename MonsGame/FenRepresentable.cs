@@ -315,7 +315,7 @@ public static class BoardExtensions
             throw new ArgumentException("Invalid FEN string for Board.");
         }
 
-        var items = new Dictionary<Location, Item>();
+        var items = new List<List<Item?>>();
         for (int i = 0; i < lines.Length; i++)
         {
             var line = lines[i];
@@ -325,14 +325,16 @@ public static class BoardExtensions
             }
 
             int j = 0;
+            var lineItems = new List<Item?>();
             while (j < line.Length)
             {
                 if (line[j] == 'n')
                 {
-                    if (j + 2 >= line.Length || !int.TryParse(line.Substring(j + 1, 2), out int emptyCount))
+                    if (j + 2 >= line.Length || !int.TryParse(line.AsSpan(j + 1, 2), out int emptyCount))
                     {
                         throw new ArgumentException("Invalid FEN string for Board.");
                     }
+                    lineItems.AddRange(Enumerable.Repeat<Item?>(null, emptyCount));
                     j += 3;
                 }
                 else
@@ -343,12 +345,26 @@ public static class BoardExtensions
                     {
                         throw new ArgumentException("Invalid FEN string for Board.");
                     }
-                    items.Add(new Location(i, j / 3), item.Value);
+                    lineItems.Add(item.Value);
                     j += 3;
+                }
+            }
+            items.Add(lineItems);
+        }
+
+        var dict = new Dictionary<Location, Item>();
+        for (int i = 0; i < items.Count; i++)
+        {
+            for (int j = 0; j < items[i].Count; j++)
+            {
+                if (items[i][j] != null)
+                {
+                    dict[new Location(i, j)] = items[i][j]!.Value;
                 }
             }
         }
 
-        return new Board(items);
+        return new Board(dict);
     }
+
 }
