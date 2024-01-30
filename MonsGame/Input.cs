@@ -2,13 +2,6 @@
 
 namespace MonsGame;
 
-public enum Modifier
-{
-    SelectPotion,
-    SelectBomb,
-    Cancel
-}
-
 public abstract class Input
 {
     public class LocationInput : Input, IEquatable<LocationInput>
