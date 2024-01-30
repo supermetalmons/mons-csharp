@@ -28,11 +28,19 @@ public static partial class ColorExtensions
         }
     }
 
-    private static readonly Random _random = new Random();
+    private static readonly Random _random = new();
 
     public static Color RandomColor()
     {
         Array values = Enum.GetValues(typeof(Color));
-        return (Color)values.GetValue(_random.Next(values.Length));
+        var index = _random.Next(values.Length);
+        var value = values.GetValue(index) as Color?;
+
+        if (value.HasValue)
+        {
+            return value.Value;
+        }
+
+        throw new InvalidOperationException("Random value is not a valid Color.");
     }
 }

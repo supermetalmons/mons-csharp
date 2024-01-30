@@ -25,12 +25,12 @@ public struct Square : IEquatable<Square>
         Kind = kind;
     }
 
-    public static Square Regular => new Square(SquareType.Regular, default, default);
-    public static Square ConsumableBase => new Square(SquareType.ConsumableBase, default, default);
-    public static Square SupermanaBase => new Square(SquareType.SupermanaBase, default, default);
-    public static Square ManaBase(Color color) => new Square(SquareType.ManaBase, color, default);
-    public static Square ManaPool(Color color) => new Square(SquareType.ManaPool, color, default);
-    public static Square MonBase(Mon.Kind kind, Color color) => new Square(SquareType.MonBase, color, kind);
+    public static Square Regular => new(SquareType.Regular, default, default);
+    public static Square ConsumableBase => new(SquareType.ConsumableBase, default, default);
+    public static Square SupermanaBase => new(SquareType.SupermanaBase, default, default);
+    public static Square ManaBase(Color color) => new(SquareType.ManaBase, color, default);
+    public static Square ManaPool(Color color) => new(SquareType.ManaPool, color, default);
+    public static Square MonBase(Mon.Kind kind, Color color) => new(SquareType.MonBase, color, kind);
 
     public override bool Equals(object obj)
     {

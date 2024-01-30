@@ -26,11 +26,11 @@ public struct Item : IEquatable<Item>
         Consumable = consumable;
     }
 
-    public static Item MonItem(Mon mon) => new Item(ItemType.Mon, mon, default, default);
-    public static Item ManaItem(Mana mana) => new Item(ItemType.Mana, default, mana, default);
-    public static Item MonWithManaItem(Mon mon, Mana mana) => new Item(ItemType.MonWithMana, mon, mana, default);
-    public static Item MonWithConsumableItem(Mon mon, Consumable consumable) => new Item(ItemType.MonWithConsumable, mon, default, consumable);
-    public static Item ConsumableItem(Consumable consumable) => new Item(ItemType.Consumable, default, default, consumable);
+    public static Item MonItem(Mon mon) => new(ItemType.Mon, mon, default, default);
+    public static Item ManaItem(Mana mana) => new(ItemType.Mana, default, mana, default);
+    public static Item MonWithManaItem(Mon mon, Mana mana) => new(ItemType.MonWithMana, mon, mana, default);
+    public static Item MonWithConsumableItem(Mon mon, Consumable consumable) => new(ItemType.MonWithConsumable, mon, default, consumable);
+    public static Item ConsumableItem(Consumable consumable) => new(ItemType.Consumable, default, default, consumable);
 
     public Mon? MonProperty => Type switch
     {

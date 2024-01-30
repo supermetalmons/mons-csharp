@@ -19,8 +19,8 @@ public struct Mana : IEquatable<Mana>
         Color = color;
     }
 
-    public static Mana Regular(Color color) => new Mana(ManaType.Regular, color);
-    public static Mana Supermana => new Mana(ManaType.Supermana, default);
+    public static Mana Regular(Color color) => new(ManaType.Regular, color);
+    public static Mana Supermana => new(ManaType.Supermana, default);
 
     public int Score(Color player)
     {

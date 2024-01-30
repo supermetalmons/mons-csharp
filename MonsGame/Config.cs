@@ -14,7 +14,7 @@ public static class Config
     public static readonly int ManaMovesPerTurn = 1;
     public static readonly int ActionsPerTurn = 1;
 
-    public static readonly Dictionary<Location, Square> Squares = new Dictionary<Location, Square>
+    public static readonly Dictionary<Location, Square> Squares = new()
     {
         [new Location(0, 0)] = Square.ManaPool(Color.Black),
         [new Location(0, 10)] = Square.ManaPool(Color.Black),
@@ -68,7 +68,7 @@ public static class Config
             }
         );
 
-    public static readonly HashSet<Location> MonsBases = new HashSet<Location>(
+    public static readonly HashSet<Location> MonsBases = new(
         Squares.Where(kv => kv.Value.Type == SquareType.MonBase).Select(kv => kv.Key)
     );
 

@@ -59,7 +59,7 @@ public struct Location : IEquatable<Location>
     }
 
     public Location LocationBetween(Location another) =>
-        new Location((I + another.I) / 2, (J + another.J) / 2);
+        new((I + another.I) / 2, (J + another.J) / 2);
 
     private IEnumerable<Location> GetNearbyLocations(int distance)
     {
