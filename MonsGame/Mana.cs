@@ -35,7 +35,7 @@ public struct Mana : IEquatable<Mana>
         }
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is Mana mana && this == mana;
     }

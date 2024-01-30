@@ -8,7 +8,7 @@ public class BoardTests
     [Fact]
     public void Constructor_WithNullItems_SetsInitialItems()
     {
-        var board = new Board(null);
+        var board = new Board();
         Assert.Equal(Config.InitialItems, board.Items);
     }
 

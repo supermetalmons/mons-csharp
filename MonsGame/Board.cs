@@ -10,10 +10,11 @@ public partial class Board
 
     public IReadOnlyDictionary<Location, Item> Items { get { return _items; } }
 
-    public Board(Dictionary<Location, Item> items = null)
+    public Board(Dictionary<Location, Item> items = default!)
     {
         _items = items ?? Config.InitialItems;
     }
+
 
     public void RemoveItem(Location location)
     {
@@ -61,7 +62,7 @@ public partial class Board
             return baseLocation.Key;
         }
     }
-    
+
     public IEnumerable<Location> AllMonsLocations(Color color)
     {
         return _items.Where(pair => pair.Value.Type == ItemType.Mon && pair.Value.Mon.color == color)
@@ -77,8 +78,8 @@ public partial class Board
     public Location Base(Mon mon)
     {
         var baseLocation = Config.Squares
-            .FirstOrDefault(pair => pair.Value.Type == SquareType.MonBase && 
-                                    pair.Value.Color == mon.color && 
+            .FirstOrDefault(pair => pair.Value.Type == SquareType.MonBase &&
+                                    pair.Value.Color == mon.color &&
                                     pair.Value.Kind == mon.kind);
 
         if (baseLocation.Equals(default(KeyValuePair<Location, Square>)))
@@ -91,8 +92,8 @@ public partial class Board
 
     public IEnumerable<Location> FaintedMonsLocations(Color color)
     {
-        return _items.Where(pair => (pair.Value.Type == ItemType.Mon || pair.Value.Type == ItemType.MonWithMana || pair.Value.Type == ItemType.MonWithConsumable) && 
-                                    pair.Value.Mon.color == color && 
+        return _items.Where(pair => (pair.Value.Type == ItemType.Mon || pair.Value.Type == ItemType.MonWithMana || pair.Value.Type == ItemType.MonWithConsumable) &&
+                                    pair.Value.Mon.color == color &&
                                     pair.Value.Mon.isFainted)
                      .Select(pair => pair.Key);
     }
@@ -105,9 +106,9 @@ public partial class Board
 
     public Location? FindAwakeAngel(Color color)
     {
-        var locationWithItem = _items.FirstOrDefault(pair => (pair.Value.Type == ItemType.Mon || pair.Value.Type == ItemType.MonWithConsumable) && 
-                                                             pair.Value.Mon.color == color && 
-                                                             pair.Value.Mon.kind == Mon.Kind.Angel && 
+        var locationWithItem = _items.FirstOrDefault(pair => (pair.Value.Type == ItemType.Mon || pair.Value.Type == ItemType.MonWithConsumable) &&
+                                                             pair.Value.Mon.color == color &&
+                                                             pair.Value.Mon.kind == Mon.Kind.Angel &&
                                                              !pair.Value.Mon.isFainted);
         return locationWithItem.Key.Equals(default(Location)) ? null : locationWithItem.Key;
     }

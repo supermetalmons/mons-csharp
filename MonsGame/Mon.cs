@@ -17,10 +17,10 @@ public struct Mon : IEquatable<Mon>
     public Color color { get; private set; }
 
     private int _cooldown;
-    public int cooldown 
-    { 
-        get => _cooldown; 
-        private set => _cooldown = value; 
+    public int cooldown
+    {
+        get => _cooldown;
+        private set => _cooldown = value;
     }
 
     public bool isFainted => cooldown > 0;
@@ -45,7 +45,7 @@ public struct Mon : IEquatable<Mon>
         }
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is Mon mon && this == mon;
     }

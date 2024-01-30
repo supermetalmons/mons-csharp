@@ -32,7 +32,7 @@ public struct Square : IEquatable<Square>
     public static Square ManaPool(Color color) => new(SquareType.ManaPool, color, default);
     public static Square MonBase(Mon.Kind kind, Color color) => new(SquareType.MonBase, color, kind);
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is Square square && this == square;
     }

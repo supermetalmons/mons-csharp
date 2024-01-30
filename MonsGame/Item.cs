@@ -54,7 +54,7 @@ public struct Item : IEquatable<Item>
         _ => null
     };
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is Item item && this == item;
     }

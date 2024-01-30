@@ -85,7 +85,7 @@ public struct Location : IEquatable<Location>
     public int DistanceTo(Location to) =>
         Math.Max(Math.Abs(to.I - I), Math.Abs(to.J - J));
 
-    public override bool Equals(object obj) =>
+    public override bool Equals(object? obj) =>
         obj is Location location && this == location;
 
     public bool Equals(Location other) =>

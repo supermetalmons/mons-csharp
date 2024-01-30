@@ -20,13 +20,13 @@ public abstract class Input
             Location = location;
         }
 
-        public bool Equals(LocationInput other)
+        public bool Equals(LocationInput? other)
         {
             if (other is null) return false;
             return Location.Equals(other.Location);
         }
 
-        public override bool Equals(object obj) => Equals(obj as LocationInput);
+        public override bool Equals(object? obj) => Equals(obj as LocationInput);
 
         public override int GetHashCode()
         {
@@ -43,13 +43,13 @@ public abstract class Input
             Modifier = modifier;
         }
 
-        public bool Equals(ModifierInput other)
+        public bool Equals(ModifierInput? other)
         {
             if (other is null) return false;
             return Modifier == other.Modifier;
         }
 
-        public override bool Equals(object obj) => Equals(obj as ModifierInput);
+        public override bool Equals(object? obj) => Equals(obj as ModifierInput);
 
         public override int GetHashCode()
         {

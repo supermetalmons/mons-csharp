@@ -33,7 +33,7 @@ public struct NextInput : IEquatable<NextInput>
         return Input.Equals(other.Input) && Kind == other.Kind && Equals(ActorMonItem, other.ActorMonItem);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is NextInput other && Equals(other);
     }

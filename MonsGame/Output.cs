@@ -23,13 +23,13 @@ public class LocationsToStartFromOutput : Output, IEquatable<LocationsToStartFro
         Locations = new HashSet<Location>(locations);
     }
 
-    public bool Equals(LocationsToStartFromOutput other)
+    public bool Equals(LocationsToStartFromOutput? other)
     {
         if (other == null) return false;
         return Locations.SetEquals(other.Locations);
     }
 
-    public override bool Equals(object obj) => Equals(obj as LocationsToStartFromOutput);
+    public override bool Equals(object? obj) => Equals(obj as LocationsToStartFromOutput);
 
     public override int GetHashCode()
     {
@@ -52,13 +52,13 @@ public class NextInputOptionsOutput : Output, IEquatable<NextInputOptionsOutput>
         NextInputs = new HashSet<NextInput>(nextInputs);
     }
 
-    public bool Equals(NextInputOptionsOutput other)
+    public bool Equals(NextInputOptionsOutput? other)
     {
         if (other == null) return false;
         return NextInputs.SetEquals(other.NextInputs);
     }
 
-    public override bool Equals(object obj) => Equals(obj as NextInputOptionsOutput);
+    public override bool Equals(object? obj) => Equals(obj as NextInputOptionsOutput);
 
     public override int GetHashCode()
     {
@@ -80,13 +80,13 @@ public class EventsOutput : Output, IEquatable<EventsOutput>
         Events = new HashSet<Event>(events);
     }
 
-    public bool Equals(EventsOutput other)
+    public bool Equals(EventsOutput? other)
     {
         if (other == null) return false;
         return Events.SetEquals(other.Events);
     }
 
-    public override bool Equals(object obj) => Equals(obj as EventsOutput);
+    public override bool Equals(object? obj) => Equals(obj as EventsOutput);
 
     public override int GetHashCode()
     {
