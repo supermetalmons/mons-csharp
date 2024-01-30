@@ -12,18 +12,8 @@ public enum Color
     Black
 }
 
-public static class ColorExtensions
+public static partial class ColorExtensions
 {
-
-    public static string Fen(this Color color)
-    {
-        return color switch
-        {
-            Color.White => "w",
-            Color.Black => "b",
-            _ => throw new ArgumentOutOfRangeException(nameof(color), color, null)
-        };
-    }
 
     public static Color Other(this Color color)
     {
