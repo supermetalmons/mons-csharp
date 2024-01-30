@@ -2,12 +2,16 @@
 
 namespace MonsGame;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 public enum ManaType
 {
     Regular,
     Supermana
 }
 
+[JsonConverter(typeof(ManaJsonConverter))]
 public struct Mana : IEquatable<Mana>
 {
     public ManaType Type { get; private set; }
@@ -58,5 +62,75 @@ public struct Mana : IEquatable<Mana>
     public static bool operator !=(Mana left, Mana right)
     {
     return !(left == right);
+    }
+}
+
+public class ManaJsonConverter : JsonConverter<Mana>
+{
+    public override Mana Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException("Expected StartObject token.");
+        }
+
+        reader.Read();
+
+        if (reader.TokenType != JsonTokenType.PropertyName)
+        {
+            throw new JsonException("Expected a PropertyName token.");
+        }
+
+        string propertyName = reader.GetString()!;
+        Mana mana;
+
+        switch (propertyName)
+        {
+            case "regular":
+                reader.Read(); // Move to StartObject of the "regular" property value
+                reader.Read(); // Move to PropertyName ("color")
+                if (reader.GetString() != "color")
+                    throw new JsonException("Expected 'color' property.");
+                reader.Read(); // Move to PropertyValue
+                Color color = JsonSerializer.Deserialize<Color>(ref reader, options);
+                mana = Mana.Regular(color);
+                reader.Read(); // Move past the EndObject
+                break;
+
+            case "supermana":
+                mana = Mana.Supermana;
+                reader.Read(); // Move to StartObject of the "supermana" property value
+                reader.Read(); // Move past the EndObject
+                break;
+
+            default:
+                throw new JsonException($"Unknown Mana type: {propertyName}");
+        }
+
+        reader.Read(); // Read EndObject
+        return mana;
+    }
+
+    public override void Write(Utf8JsonWriter writer, Mana value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+
+        switch (value.Type)
+        {
+            case ManaType.Regular:
+                writer.WritePropertyName("regular");
+                writer.WriteStartObject();
+                writer.WriteString("color", value.Color.ToString().LowercaseFirst());
+                writer.WriteEndObject();
+                break;
+
+            case ManaType.Supermana:
+                writer.WritePropertyName("supermana");
+                writer.WriteStartObject(); // Empty object for supermana
+                writer.WriteEndObject();
+                break;
+        }
+
+        writer.WriteEndObject();
     }
 }

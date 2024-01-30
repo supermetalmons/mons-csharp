@@ -86,4 +86,43 @@ public class ManaTests
 
         Assert.Equal(mana1.GetHashCode(), mana2.GetHashCode());
     }
+
+    [Fact]
+    public void Deserialize_RegularMana_WithBlackColor()
+    {
+        string json = "{\"regular\":{\"color\":\"black\"}}";
+        var mana = JsonSerializer.Deserialize<Mana>(json, JsonOptions.DefaultSerializerOptions);
+
+        Assert.Equal(ManaType.Regular, mana.Type);
+        Assert.Equal(Color.Black, mana.Color);
+    }
+
+    [Fact]
+    public void Deserialize_Supermana()
+    {
+        string json = "{\"supermana\":{}}";
+        var mana = JsonSerializer.Deserialize<Mana>(json, JsonOptions.DefaultSerializerOptions);
+
+        Assert.Equal(ManaType.Supermana, mana.Type);
+        Assert.Equal(default(Color), mana.Color); // Assuming default color for Supermana
+    }
+
+    [Fact]
+    public void Serialize_RegularMana_WithBlackColor()
+    {
+        var mana = Mana.Regular(Color.Black);
+        string json = JsonSerializer.Serialize(mana, JsonOptions.DefaultSerializerOptions);
+
+        Assert.Equal("{\"regular\":{\"color\":\"black\"}}", json);
+    }
+
+    [Fact]
+    public void Serialize_Supermana()
+    {
+        var mana = Mana.Supermana;
+        string json = JsonSerializer.Serialize(mana, JsonOptions.DefaultSerializerOptions);
+
+        Assert.Equal("{\"supermana\":{}}", json);
+    }
+
 }
