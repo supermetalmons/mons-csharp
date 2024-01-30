@@ -22,9 +22,13 @@ public class AvailableMoveKindTests
     }
 
     [Fact]
-    public void Enum_HasSerializableAttribute()
+    public void AvailableMoveKindEnumShouldSerializeAndDeserializeCorrectly()
     {
-        var attributes = typeof(AvailableMoveKind).GetCustomAttributes(typeof(SerializableAttribute), false);
-        Assert.True(attributes.Length > 0);
+        var move = AvailableMoveKind.ManaMove;
+        var serialized = JsonSerializer.Serialize(move);
+        var deserialized = JsonSerializer.Deserialize<AvailableMoveKind>(serialized);
+        Assert.Equal("\"manaMove\"", serialized);
+        Assert.Equal(AvailableMoveKind.ManaMove, deserialized);
     }
+
 }
