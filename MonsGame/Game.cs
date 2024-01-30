@@ -54,4 +54,10 @@ public partial class Game
         BlackPotionsCount = blackPotionsCount;
         TurnNumber = turnNumber;
     }
+
+    public Output ProcessInput(List<Input> inputs, bool doNotApplyEvents, bool oneOptionEnough)
+    {
+        return new InvalidInputOutput();
+    }
+
 }

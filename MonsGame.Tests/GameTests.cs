@@ -39,4 +39,15 @@ public class GameTests
         Assert.Equal(2, game.BlackPotionsCount);
         Assert.Equal(6, game.TurnNumber);
     }
+
+    [Fact]
+    public void ProcessInput_WithEmptyInput_ShouldNotChangeGameFen()
+    {
+        var game = new Game();
+        string initialFen = game.Fen;
+        game.ProcessInput(new List<Input>(), doNotApplyEvents: false, oneOptionEnough: false);
+        string finalFen = game.Fen;
+        Assert.Equal(initialFen, finalFen);
+    }
+
 }
