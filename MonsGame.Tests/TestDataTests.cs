@@ -22,15 +22,62 @@ public class TestDataTests
     {
         string baseDirectory = AppContext.BaseDirectory;
         string? projectDirectory = Directory.GetParent(baseDirectory)?.Parent?.Parent?.Parent?.FullName;
-        if (projectDirectory == null)
-        {
-            throw new InvalidOperationException("Cannot determine the project directory.");
-        }
         string testDataPath = Path.Combine(projectDirectory!, "test-data");
         foreach (string file in Directory.EnumerateFiles(testDataPath, "*", SearchOption.AllDirectories))
         {
             Assert.False(string.IsNullOrWhiteSpace(File.ReadAllText(file)), $"File {file} is empty.");
         }
     }
-    
+
+    [Fact]
+    public void FilesInTestData_ContainTestCases()
+    {
+        string baseDirectory = AppContext.BaseDirectory;
+        string? projectDirectory = Directory.GetParent(baseDirectory)?.Parent?.Parent?.Parent?.FullName;
+        string testDataPath = Path.Combine(projectDirectory!, "test-data");
+        foreach (string file in Directory.EnumerateFiles(testDataPath, "*", SearchOption.AllDirectories))
+        {
+            string jsonContent = File.ReadAllText(file);
+            Assert.False(string.IsNullOrWhiteSpace(jsonContent), $"File {file} is empty.");
+
+            RulesTestCase testCase = JsonSerializer.Deserialize<RulesTestCase>(jsonContent, JsonOptions.DefaultSerializerOptions)!;
+            Assert.NotNull(testCase);
+            Assert.False(string.IsNullOrWhiteSpace(testCase.FenBefore), $"FenBefore is empty in file {file}.");
+            Assert.False(string.IsNullOrWhiteSpace(testCase.FenAfter), $"FenAfter is empty in file {file}.");
+        }
+    }
+
+    [Fact]
+    public void FenBackAndForth()
+    {
+        string baseDirectory = AppContext.BaseDirectory;
+        string? projectDirectory = Directory.GetParent(baseDirectory)?.Parent?.Parent?.Parent?.FullName;
+        string testDataPath = Path.Combine(projectDirectory!, "test-data");
+        foreach (string file in Directory.EnumerateFiles(testDataPath, "*", SearchOption.AllDirectories))
+        {
+            string jsonContent = File.ReadAllText(file);
+            Assert.False(string.IsNullOrWhiteSpace(jsonContent), $"File {file} is empty.");
+
+            RulesTestCase testCase = JsonSerializer.Deserialize<RulesTestCase>(jsonContent, JsonOptions.DefaultSerializerOptions)!;
+
+            var gameBefore = Game.FromFen(testCase.FenBefore);
+            Assert.Equal(gameBefore.Fen, testCase.FenBefore);
+
+            var gameAfter = Game.FromFen(testCase.FenAfter);
+            Assert.Equal(gameAfter.Fen, testCase.FenAfter);
+        }
+    }
+
+    [Fact]
+    public void RulesOK()
+    {
+        string baseDirectory = AppContext.BaseDirectory;
+        string? projectDirectory = Directory.GetParent(baseDirectory)?.Parent?.Parent?.Parent?.FullName;
+        string testDataPath = Path.Combine(projectDirectory!, "test-data");
+        foreach (string file in Directory.EnumerateFiles(testDataPath, "*", SearchOption.AllDirectories))
+        {
+
+        }
+    }
+
 }
