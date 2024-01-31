@@ -60,4 +60,98 @@ public partial class Game
         return new InvalidInputOutput();
     }
 
+    // MARK: - helpers
+
+    public List<NextInput> NextInputs(IEnumerable<Location> locations, NextInputKind kind, bool onlyOne, Location? specific, Func<Location, bool> filter)
+    {
+        var inputs = new List<NextInput>();
+        if (specific != null)
+        {
+            if (locations.Contains(specific.Value) && filter(specific.Value))
+            {
+                var input = new Input.LocationInput(specific.Value);
+                inputs.Add(new NextInput(input, kind));
+            }
+        }
+        else if (onlyOne)
+        {
+            var one = locations.FirstOrDefault(loc => filter(loc));
+            if (!one.Equals(default(Location)))
+            {
+                var input = new Input.LocationInput(one);
+                inputs.Add(new NextInput(input, kind));
+            }
+        }
+        else
+        {
+            inputs.AddRange(locations.Where(loc => filter(loc)).Select(loc =>
+            {
+                var input = new Input.LocationInput(loc);
+                return new NextInput(input, kind);
+            }));
+        }
+        return inputs;
+    }
+
+
+    public Dictionary<AvailableMoveKind, int> AvailableMoveKinds(int monsMovesCount, int actionsUsedCount, int manaMovesCount, int playerPotionsCount, int turnNumber)
+    {
+        var moves = new Dictionary<AvailableMoveKind, int>
+        {
+            [AvailableMoveKind.MonMove] = Config.MonsMovesPerTurn - monsMovesCount,
+            [AvailableMoveKind.Action] = 0,
+            [AvailableMoveKind.Potion] = 0,
+            [AvailableMoveKind.ManaMove] = 0
+        };
+
+        if (turnNumber != 1)
+        {
+            moves[AvailableMoveKind.Action] = Config.ActionsPerTurn - actionsUsedCount;
+            moves[AvailableMoveKind.Potion] = playerPotionsCount;
+            moves[AvailableMoveKind.ManaMove] = Config.ManaMovesPerTurn - manaMovesCount;
+        }
+
+        return moves;
+    }
+
+    public Color? WinnerColor(int whiteScore, int blackScore)
+    {
+        if (whiteScore >= Config.TargetScore)
+        {
+            return Color.White;
+        }
+        else if (blackScore >= Config.TargetScore)
+        {
+            return Color.Black;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public bool IsFirstTurn(int turnNumber) => turnNumber == 1;
+
+    public int PlayerPotionsCount(Color activeColor, int whitePotionsCount, int blackPotionsCount)
+        => activeColor == Color.White ? whitePotionsCount : blackPotionsCount;
+
+    public bool PlayerCanMoveMon(int monsMovesCount) => monsMovesCount < Config.MonsMovesPerTurn;
+
+    public bool PlayerCanMoveMana(int turnNumber, int manaMovesCount)
+        => turnNumber != 1 && manaMovesCount < Config.ManaMovesPerTurn;
+
+    public bool PlayerCanUseAction(int turnNumber, int playerPotionsCount, int actionsUsedCount)
+        => turnNumber != 1 && (playerPotionsCount > 0 || actionsUsedCount < Config.ActionsPerTurn);
+
+    public HashSet<Location> ProtectedByOpponentsAngel(Board board, Color activeColor)
+    {
+        var protectedLocations = new HashSet<Location>();
+        var angelLocation = board.FindAwakeAngel(activeColor.Other());
+        if (angelLocation != null)
+        {
+            protectedLocations.UnionWith(angelLocation.Value.NearbyLocations);
+        }
+        return protectedLocations;
+    }
+
 }
