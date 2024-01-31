@@ -57,7 +57,40 @@ public partial class Game
 
     public Output ProcessInput(List<Input> inputs, bool doNotApplyEvents, bool oneOptionEnough)
     {
+        // TODO: implement
         return new InvalidInputOutput();
+    }
+
+    // MARK: - process step by step
+
+    private Output SuggestedInputToStartWith()
+    {
+        // TODO: implement
+        return new InvalidInputOutput();
+    }
+
+    private List<NextInput> SecondInputOptions(Location startLocation, Item startItem, bool onlyOne, Input? specificNext = null)
+    {
+        // TODO: implement
+        return new List<NextInput>();
+    }
+
+    private (List<Event>, List<NextInput>)? ProcessSecondInput(NextInputKind kind, Item startItem, Location startLocation, Location targetLocation, Input? specificNext = null)
+    {
+        // TODO: implement
+        return null;
+    }
+
+    private (List<Event>, List<NextInput>)? ProcessThirdInput(NextInput thirdInput, Item startItem, Location startLocation, Location targetLocation)
+    {
+        // TODO: implement
+        return null;
+    }
+
+    private List<Event> ApplyAndAddResultingEvents(List<Event> events)
+    {
+        // TODO: implement
+        return [];
     }
 
     // MARK: - helpers
