@@ -126,7 +126,12 @@ public class TestDataTests
         string testDataPath = Path.Combine(projectDirectory!, "test-data");
         foreach (string file in Directory.EnumerateFiles(testDataPath, "*", SearchOption.AllDirectories))
         {
-
+            string jsonContent = File.ReadAllText(file);
+            RulesTestCase testCase = JsonSerializer.Deserialize<RulesTestCase>(jsonContent, JsonOptions.DefaultSerializerOptions)!;
+            var newGame = Game.FromFen(testCase.FenBefore);
+            newGame.ProcessInput(testCase.Input, doNotApplyEvents: false, oneOptionEnough: false);
+            Assert.Equal(testCase.FenBefore, newGame.Fen);
+            // TODO: validate output as well
         }
     }
 
