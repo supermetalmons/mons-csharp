@@ -87,27 +87,27 @@ public class ManaJsonConverter : JsonConverter<Mana>
         switch (propertyName)
         {
             case "regular":
-                reader.Read(); // Move to StartObject of the "regular" property value
-                reader.Read(); // Move to PropertyName ("color")
+                reader.Read();
+                reader.Read();
                 if (reader.GetString() != "color")
                     throw new JsonException("Expected 'color' property.");
-                reader.Read(); // Move to PropertyValue
+                reader.Read();
                 Color color = JsonSerializer.Deserialize<Color>(ref reader, options);
                 mana = Mana.Regular(color);
-                reader.Read(); // Move past the EndObject
+                reader.Read();
                 break;
 
             case "supermana":
                 mana = Mana.Supermana;
-                reader.Read(); // Move to StartObject of the "supermana" property value
-                reader.Read(); // Move past the EndObject
+                reader.Read();
+                reader.Read();
                 break;
 
             default:
                 throw new JsonException($"Unknown Mana type: {propertyName}");
         }
 
-        reader.Read(); // Read EndObject
+        reader.Read();
         return mana;
     }
 
@@ -126,7 +126,7 @@ public class ManaJsonConverter : JsonConverter<Mana>
 
             case ManaType.Supermana:
                 writer.WritePropertyName("supermana");
-                writer.WriteStartObject(); // Empty object for supermana
+                writer.WriteStartObject();
                 writer.WriteEndObject();
                 break;
         }
