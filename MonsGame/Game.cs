@@ -55,7 +55,7 @@ public partial class Game
         TurnNumber = turnNumber;
     }
 
-    private Output ProcessInput(List<Input> inputs, bool doNotApplyEvents, bool oneOptionEnough)
+    public Output ProcessInput(List<Input> inputs, bool doNotApplyEvents, bool oneOptionEnough)
     {
         if (WinnerColor(WhiteScore, BlackScore).HasValue) return new InvalidInputOutput();
         if (!inputs.Any()) return SuggestedInputToStartWith();
@@ -63,10 +63,10 @@ public partial class Game
 
         var startLocation = locationInput.Location;
         var startItem = Board.GetItem(startLocation);
-        if (startItem.Equals(default(Item))) return new InvalidInputOutput();
+        if (startItem == null) return new InvalidInputOutput();
 
         Input? specificSecondInput = inputs.Count > 1 ? inputs[1] : null;
-        var secondInputOptions = SecondInputOptions(startLocation, startItem, oneOptionEnough, specificSecondInput);
+        var secondInputOptions = SecondInputOptions(startLocation, startItem.Value, oneOptionEnough, specificSecondInput);
 
         if (specificSecondInput == null)
         {
@@ -82,16 +82,13 @@ public partial class Game
 
         if (!(specificSecondInput is Input.LocationInput targetLocationInput)) return new InvalidInputOutput();
         var targetLocation = targetLocationInput.Location;
-        var secondInputKind = secondInputOptions.FirstOrDefault(opt => opt.Input.Equals(specificSecondInput))?.Kind;
-        if (!secondInputKind.HasValue) return new InvalidInputOutput();
-
+        var secondInputKind = secondInputOptions.Select(opt => (NextInput?)opt).FirstOrDefault(opt => opt.HasValue && opt.Value.Input.Equals(specificSecondInput))?.Kind;
+        if (secondInputKind == null) return new InvalidInputOutput();
         Input? specificThirdInput = inputs.Count > 2 ? inputs[2] : null;
-        var outputForSecondInput = ProcessSecondInput(secondInputKind.Value, startItem, startLocation, targetLocation, specificThirdInput);
+        var outputForSecondInput = ProcessSecondInput(secondInputKind.Value, startItem.Value, startLocation, targetLocation, specificThirdInput);
         if (outputForSecondInput == null) return new InvalidInputOutput();
-
         var thirdInputOptions = outputForSecondInput.Value.Item2;
         var events = outputForSecondInput.Value.Item1;
-
         if (specificThirdInput == null)
         {
             if (thirdInputOptions.Any())
@@ -108,44 +105,7 @@ public partial class Game
             }
         }
 
-        if (!(specificThirdInput is Input.LocationInput thirdLocationInput)) return new InvalidInputOutput();
-        var thirdInputKind = thirdInputOptions.FirstOrDefault(opt => opt.Input.Equals(specificThirdInput))?.Kind;
-        if (!thirdInputKind.HasValue) return new InvalidInputOutput();
-
-        Input? specificFourthInput = inputs.Count > 3 ? inputs[3] : null;
-        var outputForThirdInput = ProcessThirdInput(thirdInputKind.Value, startItem, startLocation, targetLocation, specificFourthInput);
-        if (outputForThirdInput == null) return new InvalidInputOutput();
-
-        var fourthInputOptions = outputForThirdInput.Value.Item2;
-        events.AddRange(outputForThirdInput.Value.Item1);
-
-        if (specificFourthInput == null)
-        {
-            if (fourthInputOptions.Any())
-            {
-                return new NextInputOptionsOutput(fourthInputOptions);
-            }
-            else if (events.Any())
-            {
-                return new EventsOutput(events);
-            }
-            else
-            {
-                return new InvalidInputOutput();
-            }
-        }
-
-        if (!(specificFourthInput is Input.ModifierInput fourthModifierInput)) return new InvalidInputOutput();
-        var modifier = fourthModifierInput.Modifier;
-        switch (modifier)
-        {
-            case Modifier.SelectBomb:
-            case Modifier.SelectPotion:
-                // Process selection
-                break;
-            case Modifier.Cancel:
-                return new InvalidInputOutput();
-        }
+        // TODO: implement missing part
 
         return new EventsOutput(events);
     }
@@ -171,7 +131,7 @@ public partial class Game
         };
 
         var suggestedLocations = Board.AllMonsLocations(ActiveColor).Select(locationsFilter).Where(l => l != null).Cast<Location>().ToList();
-        if ((!PlayerCanMoveMon(MonsMovesCount) && !PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount)) || suggestedLocations.Count == 0) && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
+        if ((!PlayerCanMoveMon(MonsMovesCount) && !PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount), ActionsUsedCount) || suggestedLocations.Count == 0) && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
         {
             suggestedLocations.AddRange(Board.AllFreeRegularManaLocations(ActiveColor).Select(locationsFilter).Where(l => l != null).Cast<Location>());
         }
@@ -201,7 +161,7 @@ public partial class Game
         switch (startItem.Type)
         {
             case ItemType.Mon:
-                var mon = startItem.Mon.Value;
+                var mon = startItem.Mon;
                 if (mon.color == ActiveColor && !mon.isFainted && PlayerCanMoveMon(MonsMovesCount))
                 {
                     secondInputOptions.UnionWith(NextInputs(startLocation.NearbyLocations, NextInputKind.MonMove, onlyOne, specificLocation, location =>
@@ -214,11 +174,11 @@ public partial class Game
                             { Type: ItemType.Mon or ItemType.MonWithMana or ItemType.MonWithConsumable } => false,
                             { Type: ItemType.Mana } => mon.kind != Mon.Kind.Drainer,
                             { Type: ItemType.Consumable } => true,
-                            _ => square switch
+                            _ => square.Type switch
                             {
-                                Square.Regular or Square.ConsumableBase or Square.ManaBase or Square.ManaPool => true,
-                                Square.SupermanaBase => item?.Mana.Type == ManaType.Supermana && mon.kind == Mon.Kind.Drainer,
-                                Square.MonBase => mon.kind == item?.Mon.Kind && mon.color == item?.Mon.Color, // This case might need adjustment
+                                SquareType.Regular or SquareType.ConsumableBase or SquareType.ManaBase or SquareType.ManaPool => true,
+                                SquareType.SupermanaBase => item?.Mana.Type == ManaType.Supermana && mon.kind == Mon.Kind.Drainer,
+                                SquareType.MonBase => mon.kind == item?.MonProperty?.kind && mon.color == item?.MonProperty.Value.color,
                                 _ => false,
                             }
                         };
@@ -233,20 +193,19 @@ public partial class Game
                 break;
 
             case ItemType.Mana:
-                var mana = startItem.Mana.Value;
-                if (mana.Color == ActiveColor && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
+                var mana = startItem.ManaProperty;
+                if (mana?.Color == ActiveColor && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
                 {
                     secondInputOptions.UnionWith(NextInputs(startLocation.NearbyLocations, NextInputKind.ManaMove, onlyOne, specificLocation, location =>
                     {
                         var item = Board.GetItem(location);
                         var square = Board.SquareAt(location);
-
                         return item switch
                         {
-                            { Type: ItemType.Mon } => item.Mon.Value.kind == Mon.Kind.Drainer,
-                            _ => square switch
+                            { Type: ItemType.Mon } => item?.MonProperty?.kind == Mon.Kind.Drainer,
+                            _ => square.Type switch
                             {
-                                Square.Regular or Square.ConsumableBase or Square.ManaBase or Square.ManaPool => true,
+                                SquareType.Regular or SquareType.ConsumableBase or SquareType.ManaBase or SquareType.ManaPool => true,
                                 _ => false,
                             }
                         };
@@ -278,7 +237,7 @@ public partial class Game
         switch (kind)
         {
             case NextInputKind.MonMove:
-                if (!startItem.Mon.HasValue) return null;
+                if (!startItem.MonProperty.HasValue) return null;
                 events.Add(new MonMoveEvent(startItem, startLocation, targetLocation));
 
                 if (targetItem.HasValue)
@@ -292,24 +251,24 @@ public partial class Game
                             return null;
 
                         case ItemType.Mana:
-                            var mana = targetItem.Value.Mana.Value;
-                            if (startItem.Mana.HasValue)
+                            var mana = targetItem.Value.ManaProperty;
+                            if (startItem.ManaProperty.HasValue)
                             {
-                                var startMana = startItem.Mana.Value;
+                                var startMana = startItem.ManaProperty.Value;
                                 if (startMana.Type == ManaType.Supermana)
                                 {
-                                    events.Add(new Event { Type = Event.EventType.SupermanaBackToBase }); // This needs specific event creation
+                                    // events.Add(new Event { Type = Event.EventType.SupermanaBackToBase }); // This needs specific event creation
                                 }
                                 else
                                 {
-                                    events.Add(new Event { Type = Event.EventType.ManaDropped }); // This needs specific event creation
+                                    // events.Add(new Event { Type = Event.EventType.ManaDropped }); // This needs specific event creation
                                 }
                             }
-                            events.Add(new Event { Type = Event.EventType.PickupMana }); // This needs specific event creation
+                            // events.Add(new Event { Type = Event.EventType.PickupMana }); // This needs specific event creation
                             break;
 
                         case ItemType.Consumable:
-                            var consumable = targetItem.Value.Consumable.Value;
+                            var consumable = targetItem.Value.ConsumableProperty;
                             switch (consumable)
                             {
                                 case Consumable.Potion:
@@ -317,9 +276,9 @@ public partial class Game
                                     return null;
 
                                 case Consumable.BombOrPotion:
-                                    if (startItem.Consumable.HasValue || startItem.Mana.HasValue)
+                                    if (startItem.ConsumableProperty.HasValue || startItem.ManaProperty.HasValue)
                                     {
-                                        events.Add(new Event { Type = Event.EventType.PickupPotion }); // This needs specific event creation
+                                        // events.Add(new Event { Type = Event.EventType.PickupPotion }); // This needs specific event creation
                                     }
                                     else
                                     {
@@ -332,9 +291,9 @@ public partial class Game
                     }
                 }
 
-                if (targetSquare == Square.ManaPool && startItem.Mana.HasValue)
+                if (targetSquare.Type == SquareType.ManaPool && startItem.ManaProperty.HasValue)
                 {
-                    events.Add(new Event { Type = Event.EventType.ManaScored }); // This needs specific event creation
+                    // events.Add(new Event { Type = Event.EventType.ManaScored }); // This needs specific event creation
                 }
                 break;
 
@@ -371,45 +330,45 @@ public partial class Game
                 var destinationItem = Board.GetItem(destinationLocation);
                 var destinationSquare = Board.SquareAt(destinationLocation);
 
-                events.Add(new SpiritTargetMoveEvent(targetItem, targetLocation, destinationLocation));
+                // events.Add(new SpiritTargetMoveEvent(targetItem, targetLocation, destinationLocation));
 
                 if (destinationItem != null)
                 {
-                    switch (targetItem.Type)
+                    switch (targetItem.Value.Type)
                     {
-                        case ItemType.Mon when destinationItem.Type is ItemType.Mana:
-                            events.Add(new PickupManaEvent(destinationItem.Mana, targetItem.Mon, destinationLocation));
+                        case ItemType.Mon when destinationItem?.Type is ItemType.Mana:
+                            // events.Add(new PickupManaEvent(destinationItem.Mana, targetItem.Mon, destinationLocation));
                             break;
 
-                        case ItemType.Mon when destinationItem.Type is ItemType.Consumable && destinationItem.Consumable == Consumable.BombOrPotion:
+                        case ItemType.Mon when destinationItem?.Type is ItemType.Consumable && destinationItem?.Consumable == Consumable.BombOrPotion:
                             forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, targetItem));
                             forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, targetItem));
                             break;
 
-                        case ItemType.Mana when destinationItem.Type is ItemType.Mon:
-                            events.Add(new PickupManaEvent(targetItem.Mana, destinationItem.Mon, destinationLocation));
+                        case ItemType.Mana when destinationItem?.Type is ItemType.Mon:
+                            // events.Add(new PickupManaEvent(targetItem.Mana, destinationItem?.MonProperty, destinationLocation));
                             break;
 
-                        case ItemType.Consumable when destinationItem.Type is ItemType.Mon && targetItem.Consumable == Consumable.BombOrPotion:
+                        case ItemType.Consumable when destinationItem?.Type is ItemType.Mon && targetItem?.Consumable == Consumable.BombOrPotion:
                             forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, destinationItem));
                             forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, destinationItem));
                             break;
                     }
 
-                    if (destinationSquare.Type == SquareType.ManaPool && targetItem.Mana != null)
+                    if (destinationSquare.Type == SquareType.ManaPool && targetItem!.Value.ManaProperty != null)
                     {
-                        events.Add(new ManaScoredEvent(targetItem.Mana, destinationLocation));
+                        // events.Add(new ManaScoredEvent(targetItem.Mana, destinationLocation));
                     }
                 }
                 break;
 
             case NextInputKind.DemonAdditionalStep:
-                if (thirdInput.Input is not Input.LocationInput demonStepInput || startItem.Mon == null) return null;
+                if (thirdInput.Input is not Input.LocationInput demonStepInput || startItem.MonProperty == null) return null;
                 var destinationLocationDemonStep = demonStepInput.Location;
                 events.Add(new DemonAdditionalStepEvent(startItem.Mon, targetLocation, destinationLocationDemonStep));
 
                 var itemAtDestination = Board.GetItem(destinationLocationDemonStep);
-                if (itemAtDestination.Type == ItemType.Consumable && itemAtDestination.Consumable == Consumable.BombOrPotion)
+                if (itemAtDestination?.Type == ItemType.Consumable && itemAtDestination?.Consumable == Consumable.BombOrPotion)
                 {
                     forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, startItem));
                     forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, startItem));
@@ -418,7 +377,7 @@ public partial class Game
 
 
             case NextInputKind.SelectConsumable:
-                if (!(thirdInput.Input is Input.ModifierInput modifierInput) || startItem.Mon == null) return null;
+                if (!(thirdInput.Input is Input.ModifierInput modifierInput) || startItem.MonProperty == null) return null;
                 switch (modifierInput.Modifier)
                 {
                     case Modifier.SelectBomb:
@@ -489,7 +448,7 @@ public partial class Game
                         WhiteScore += manaScoredEvent.Mana.Score(Color.White);
                     }
 
-                    if (Board.GetItem(manaScoredEvent.At).MonProperty is Mon mon)
+                    if (Board.GetItem(manaScoredEvent.At)?.MonProperty is Mon mon)
                     {
                         Board.Put(Item.MonItem(mon), manaScoredEvent.At);
                     }
@@ -598,7 +557,7 @@ public partial class Game
 
             foreach (Location monLocation in Board.FaintedMonsLocations(ActiveColor))
             {
-                if (Board.GetItem(monLocation).MonProperty is Mon mon)
+                if (Board.GetItem(monLocation)?.MonProperty is Mon mon)
                 {
                     mon.DecreaseCooldown();
                     Board.Put(Item.MonItem(mon), monLocation);

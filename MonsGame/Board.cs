@@ -26,11 +26,15 @@ public partial class Board
         _items[location] = item;
     }
 
-    public Item GetItem(Location location)
+    public Item? GetItem(Location location)
     {
-        _items.TryGetValue(location, out Item item);
-        return item;
+        if (_items.TryGetValue(location, out Item item))
+        {
+            return item;
+        }
+        return null;
     }
+
 
     public Square SquareAt(Location location)
     {
