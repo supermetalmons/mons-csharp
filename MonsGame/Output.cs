@@ -119,19 +119,19 @@ public class OutputJsonConverter : JsonConverter<Output>
             {
                 var eventArray = eventsProperty.GetProperty("_0");
                 var events = JsonSerializer.Deserialize<List<Event>>(eventArray.GetRawText(), options);
-                return new EventsOutput(events);
+                return new EventsOutput(events!);
             }
             else if (root.TryGetProperty("locationsToStartFrom", out var locationsProperty))
             {
                 var locationsArray = locationsProperty.GetProperty("_0");
                 var locations = JsonSerializer.Deserialize<List<Location>>(locationsArray.GetRawText(), options);
-                return new LocationsToStartFromOutput(locations);
+                return new LocationsToStartFromOutput(locations!);
             }
             else if (root.TryGetProperty("nextInputOptions", out var nextInputsProperty))
             {
                 var nextInputsArray = nextInputsProperty.GetProperty("_0");
                 var nextInputs = JsonSerializer.Deserialize<List<NextInput>>(nextInputsArray.GetRawText(), options);
-                return new NextInputOptionsOutput(nextInputs);
+                return new NextInputOptionsOutput(nextInputs!);
             }
             else
             {
