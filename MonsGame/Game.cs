@@ -55,31 +55,298 @@ public partial class Game
         TurnNumber = turnNumber;
     }
 
-    public Output ProcessInput(List<Input> inputs, bool doNotApplyEvents, bool oneOptionEnough)
+    private Output ProcessInput(List<Input> inputs, bool doNotApplyEvents, bool oneOptionEnough)
     {
-        // TODO: implement
-        return new InvalidInputOutput();
+        if (WinnerColor(WhiteScore, BlackScore).HasValue) return new InvalidInputOutput();
+        if (!inputs.Any()) return SuggestedInputToStartWith();
+        if (!(inputs[0] is Input.LocationInput locationInput)) return new InvalidInputOutput();
+
+        var startLocation = locationInput.Location;
+        var startItem = Board.GetItem(startLocation);
+        if (startItem.Equals(default(Item))) return new InvalidInputOutput();
+
+        Input? specificSecondInput = inputs.Count > 1 ? inputs[1] : null;
+        var secondInputOptions = SecondInputOptions(startLocation, startItem, oneOptionEnough, specificSecondInput);
+
+        if (specificSecondInput == null)
+        {
+            if (!secondInputOptions.Any())
+            {
+                return new InvalidInputOutput();
+            }
+            else
+            {
+                return new NextInputOptionsOutput(secondInputOptions);
+            }
+        }
+
+        if (!(specificSecondInput is Input.LocationInput targetLocationInput)) return new InvalidInputOutput();
+        var targetLocation = targetLocationInput.Location;
+        var secondInputKind = secondInputOptions.FirstOrDefault(opt => opt.Input.Equals(specificSecondInput))?.Kind;
+        if (!secondInputKind.HasValue) return new InvalidInputOutput();
+
+        Input? specificThirdInput = inputs.Count > 2 ? inputs[2] : null;
+        var outputForSecondInput = ProcessSecondInput(secondInputKind.Value, startItem, startLocation, targetLocation, specificThirdInput);
+        if (outputForSecondInput == null) return new InvalidInputOutput();
+
+        var thirdInputOptions = outputForSecondInput.Value.Item2;
+        var events = outputForSecondInput.Value.Item1;
+
+        if (specificThirdInput == null)
+        {
+            if (thirdInputOptions.Any())
+            {
+                return new NextInputOptionsOutput(thirdInputOptions);
+            }
+            else if (events.Any())
+            {
+                return new EventsOutput(events);
+            }
+            else
+            {
+                return new InvalidInputOutput();
+            }
+        }
+
+        if (!(specificThirdInput is Input.LocationInput thirdLocationInput)) return new InvalidInputOutput();
+        var thirdInputKind = thirdInputOptions.FirstOrDefault(opt => opt.Input.Equals(specificThirdInput))?.Kind;
+        if (!thirdInputKind.HasValue) return new InvalidInputOutput();
+
+        Input? specificFourthInput = inputs.Count > 3 ? inputs[3] : null;
+        var outputForThirdInput = ProcessThirdInput(thirdInputKind.Value, startItem, startLocation, targetLocation, specificFourthInput);
+        if (outputForThirdInput == null) return new InvalidInputOutput();
+
+        var fourthInputOptions = outputForThirdInput.Value.Item2;
+        events.AddRange(outputForThirdInput.Value.Item1);
+
+        if (specificFourthInput == null)
+        {
+            if (fourthInputOptions.Any())
+            {
+                return new NextInputOptionsOutput(fourthInputOptions);
+            }
+            else if (events.Any())
+            {
+                return new EventsOutput(events);
+            }
+            else
+            {
+                return new InvalidInputOutput();
+            }
+        }
+
+        if (!(specificFourthInput is Input.ModifierInput fourthModifierInput)) return new InvalidInputOutput();
+        var modifier = fourthModifierInput.Modifier;
+        switch (modifier)
+        {
+            case Modifier.SelectBomb:
+            case Modifier.SelectPotion:
+                // Process selection
+                break;
+            case Modifier.Cancel:
+                return new InvalidInputOutput();
+        }
+
+        return new EventsOutput(events);
     }
+
 
     // MARK: - process step by step
 
     private Output SuggestedInputToStartWith()
     {
-        // TODO: implement
-        return new InvalidInputOutput();
+        Func<Location, Location?> locationsFilter = location =>
+        {
+            var inputs = new List<Input> { new Input.LocationInput(location) };
+            var output = ProcessInput(inputs, doNotApplyEvents: true, oneOptionEnough: true);
+
+            if (output is NextInputOptionsOutput optionsOutput && optionsOutput.NextInputs.Any())
+            {
+                return location;
+            }
+            else
+            {
+                return null;
+            }
+        };
+
+        var suggestedLocations = Board.AllMonsLocations(ActiveColor).Select(locationsFilter).Where(l => l != null).Cast<Location>().ToList();
+        if ((!PlayerCanMoveMon(MonsMovesCount) && !PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount)) || suggestedLocations.Count == 0) && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
+        {
+            suggestedLocations.AddRange(Board.AllFreeRegularManaLocations(ActiveColor).Select(locationsFilter).Where(l => l != null).Cast<Location>());
+        }
+
+        if (suggestedLocations.Count == 0)
+        {
+            return new InvalidInputOutput();
+        }
+        else
+        {
+            return new LocationsToStartFromOutput(suggestedLocations);
+        }
     }
 
-    private List<NextInput> SecondInputOptions(Location startLocation, Item startItem, bool onlyOne, Input? specificNext = null)
+
+    private HashSet<NextInput> SecondInputOptions(Location startLocation, Item startItem, bool onlyOne, Input? specificNext)
     {
-        // TODO: implement
-        return new List<NextInput>();
+        Location? specificLocation = null;
+        if (specificNext is Input.LocationInput locationInput)
+        {
+            specificLocation = locationInput.Location;
+        }
+
+        var startSquare = Board.SquareAt(startLocation);
+        HashSet<NextInput> secondInputOptions = new HashSet<NextInput>();
+
+        switch (startItem.Type)
+        {
+            case ItemType.Mon:
+                var mon = startItem.Mon.Value;
+                if (mon.color == ActiveColor && !mon.isFainted && PlayerCanMoveMon(MonsMovesCount))
+                {
+                    secondInputOptions.UnionWith(NextInputs(startLocation.NearbyLocations, NextInputKind.MonMove, onlyOne, specificLocation, location =>
+                    {
+                        var item = Board.GetItem(location);
+                        var square = Board.SquareAt(location);
+
+                        return item switch
+                        {
+                            { Type: ItemType.Mon or ItemType.MonWithMana or ItemType.MonWithConsumable } => false,
+                            { Type: ItemType.Mana } => mon.kind != Mon.Kind.Drainer,
+                            { Type: ItemType.Consumable } => true,
+                            _ => square switch
+                            {
+                                Square.Regular or Square.ConsumableBase or Square.ManaBase or Square.ManaPool => true,
+                                Square.SupermanaBase => item?.Mana.Type == ManaType.Supermana && mon.kind == Mon.Kind.Drainer,
+                                Square.MonBase => mon.kind == item?.Mon.Kind && mon.color == item?.Mon.Color, // This case might need adjustment
+                                _ => false,
+                            }
+                        };
+                    }));
+
+                    if (onlyOne && secondInputOptions.Any()) return secondInputOptions;
+                }
+
+                // Handling for Mystic, Demon, Spirit actions based on `mon.kind`
+                // This section would need significant adaptation to match C# syntax and logic flow.
+
+                break;
+
+            case ItemType.Mana:
+                var mana = startItem.Mana.Value;
+                if (mana.Color == ActiveColor && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
+                {
+                    secondInputOptions.UnionWith(NextInputs(startLocation.NearbyLocations, NextInputKind.ManaMove, onlyOne, specificLocation, location =>
+                    {
+                        var item = Board.GetItem(location);
+                        var square = Board.SquareAt(location);
+
+                        return item switch
+                        {
+                            { Type: ItemType.Mon } => item.Mon.Value.kind == Mon.Kind.Drainer,
+                            _ => square switch
+                            {
+                                Square.Regular or Square.ConsumableBase or Square.ManaBase or Square.ManaPool => true,
+                                _ => false,
+                            }
+                        };
+                    }));
+                }
+
+                break;
+
+                // Additional cases for MonWithMana, MonWithConsumable, etc., following similar logic to the above cases.
+        }
+
+        return secondInputOptions;
     }
 
-    private (List<Event>, List<NextInput>)? ProcessSecondInput(NextInputKind kind, Item startItem, Location startLocation, Location targetLocation, Input? specificNext = null)
+
+    private (HashSet<Event>, HashSet<NextInput>)? ProcessSecondInput(NextInputKind kind, Item startItem, Location startLocation, Location targetLocation, Input? specificNext)
     {
-        // TODO: implement
-        return null;
+        Location? specificLocation = null;
+        if (specificNext is Input.LocationInput locationInput)
+        {
+            specificLocation = locationInput.Location;
+        }
+
+        HashSet<NextInput> thirdInputOptions = new HashSet<NextInput>();
+        HashSet<Event> events = new HashSet<Event>();
+        Square targetSquare = Board.SquareAt(targetLocation);
+        var targetItem = Board.GetItem(targetLocation); // Adjusted to fit the updated method signature
+
+        switch (kind)
+        {
+            case NextInputKind.MonMove:
+                if (!startItem.Mon.HasValue) return null;
+                events.Add(new MonMoveEvent(startItem, startLocation, targetLocation));
+
+                if (targetItem.HasValue)
+                {
+                    var targetItemType = targetItem.Value.Type;
+                    switch (targetItemType)
+                    {
+                        case ItemType.Mon:
+                        case ItemType.MonWithMana:
+                        case ItemType.MonWithConsumable:
+                            return null;
+
+                        case ItemType.Mana:
+                            var mana = targetItem.Value.Mana.Value;
+                            if (startItem.Mana.HasValue)
+                            {
+                                var startMana = startItem.Mana.Value;
+                                if (startMana.Type == ManaType.Supermana)
+                                {
+                                    events.Add(new Event { Type = Event.EventType.SupermanaBackToBase }); // This needs specific event creation
+                                }
+                                else
+                                {
+                                    events.Add(new Event { Type = Event.EventType.ManaDropped }); // This needs specific event creation
+                                }
+                            }
+                            events.Add(new Event { Type = Event.EventType.PickupMana }); // This needs specific event creation
+                            break;
+
+                        case ItemType.Consumable:
+                            var consumable = targetItem.Value.Consumable.Value;
+                            switch (consumable)
+                            {
+                                case Consumable.Potion:
+                                case Consumable.Bomb:
+                                    return null;
+
+                                case Consumable.BombOrPotion:
+                                    if (startItem.Consumable.HasValue || startItem.Mana.HasValue)
+                                    {
+                                        events.Add(new Event { Type = Event.EventType.PickupPotion }); // This needs specific event creation
+                                    }
+                                    else
+                                    {
+                                        thirdInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, startItem));
+                                        thirdInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, startItem));
+                                    }
+                                    break;
+                            }
+                            break;
+                    }
+                }
+
+                if (targetSquare == Square.ManaPool && startItem.Mana.HasValue)
+                {
+                    events.Add(new Event { Type = Event.EventType.ManaScored }); // This needs specific event creation
+                }
+                break;
+
+            case NextInputKind.ManaMove:
+                // Implementation for ManaMove, assuming it follows a similar pattern to MonMove.
+                break;
+        }
+
+        return (events, thirdInputOptions);
     }
+
+
 
     private (List<Event>, List<NextInput>)? ProcessThirdInput(NextInput thirdInput, Item startItem, Location startLocation, Location targetLocation)
     {
