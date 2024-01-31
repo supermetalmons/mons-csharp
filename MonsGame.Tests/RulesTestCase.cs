@@ -7,9 +7,9 @@ using MonsGame;
 public class RulesTestCase
 {
     public string FenBefore { get; set; } = string.Empty;
-    public List<Input> Input { get; set; } = new List<Input>();
-    // public Output Output { get; set; } = new InvalidInputOutput();
     public string FenAfter { get; set; } = string.Empty;
+    // public Output Output { get; set; } = new InvalidInputOutput();
+    public List<Input> Input { get; set; } = new List<Input>();
 
     public RulesTestCase()
     {
