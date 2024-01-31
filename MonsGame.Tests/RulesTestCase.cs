@@ -8,7 +8,7 @@ public class RulesTestCase
 {
     public string FenBefore { get; set; } = string.Empty;
     public string FenAfter { get; set; } = string.Empty;
-    // public Output Output { get; set; } = new InvalidInputOutput();
+    public Output Output { get; set; } = default!;
     public List<Input> Input { get; set; } = new List<Input>();
 
     public RulesTestCase()

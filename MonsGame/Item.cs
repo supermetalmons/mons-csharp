@@ -140,17 +140,12 @@ public class ItemJsonConverter : JsonConverter<Item>
                 item = Item.ConsumableItem(consumablec);
                 break;
             case "mon":
-                mon = JsonSerializer.Deserialize<Mon>(property.Value.GetProperty("mon").GetRawText(), options);
-                item = Item.MonItem(mon);
+                var monc = JsonSerializer.Deserialize<Mon>(property.Value.GetProperty("mon").GetRawText(), options);
+                item = Item.MonItem(monc);
                 break;
             default:
                 throw new JsonException($"Unknown property {property.Name}.");
         }
-    }
-
-    if (item.Equals(default(Item)))
-    {
-        throw new JsonException("Item deserialization failed.");
     }
 
     return item;

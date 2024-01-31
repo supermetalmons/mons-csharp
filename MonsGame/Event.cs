@@ -309,6 +309,12 @@ public class EventJsonConverter : JsonConverter<Event>
                 JsonSerializer.Deserialize<Mon>(eventObj.GetProperty("demon").GetRawText(), options),
                 JsonSerializer.Deserialize<Location>(eventObj.GetProperty("from").GetRawText(), options),
                 JsonSerializer.Deserialize<Location>(eventObj.GetProperty("to").GetRawText(), options)),
+            "manaScored" => new ManaScoredEvent(
+                JsonSerializer.Deserialize<Mana>(eventObj.GetProperty("mana").GetRawText(), options),
+                JsonSerializer.Deserialize<Location>(eventObj.GetProperty("at").GetRawText(), options)),
+            "manaDropped" => new ManaDroppedEvent(
+                JsonSerializer.Deserialize<Mana>(eventObj.GetProperty("mana").GetRawText(), options),
+                JsonSerializer.Deserialize<Location>(eventObj.GetProperty("at").GetRawText(), options)),
             "demonAdditionalStep" => new DemonAdditionalStepEvent(
                 JsonSerializer.Deserialize<Mon>(eventObj.GetProperty("demon").GetRawText(), options),
                 JsonSerializer.Deserialize<Location>(eventObj.GetProperty("from").GetRawText(), options),
@@ -450,6 +456,18 @@ public class EventJsonConverter : JsonConverter<Event>
                 JsonSerializer.Serialize(writer, monAwakeEvent.Mon, options);
                 writer.WritePropertyName("at");
                 JsonSerializer.Serialize(writer, monAwakeEvent.At, options);
+                break;
+            case ManaDroppedEvent manaDroppedEvent:
+                writer.WritePropertyName("mana");
+                JsonSerializer.Serialize(writer, manaDroppedEvent.Mana, options);
+                writer.WritePropertyName("at");
+                JsonSerializer.Serialize(writer, manaDroppedEvent.At, options);
+                break;
+            case ManaScoredEvent manaScoredEvent:
+                writer.WritePropertyName("mana");
+                JsonSerializer.Serialize(writer, manaScoredEvent.Mana, options);
+                writer.WritePropertyName("at");
+                JsonSerializer.Serialize(writer, manaScoredEvent.At, options);
                 break;
             case BombExplosionEvent bombExplosionEvent:
                 writer.WritePropertyName("at");
