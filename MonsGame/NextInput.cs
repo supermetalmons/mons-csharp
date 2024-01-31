@@ -2,6 +2,10 @@
 
 namespace MonsGame;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+[JsonConverter(typeof(NextInputKindJsonConverter))]
 public enum NextInputKind
 {
     MonMove,
@@ -15,6 +19,7 @@ public enum NextInputKind
     BombAttack
 }
 
+[JsonConverter(typeof(NextInputJsonConverter))]
 public struct NextInput : IEquatable<NextInput>
 {
     public Input Input { get; }
@@ -51,5 +56,77 @@ public struct NextInput : IEquatable<NextInput>
     public static bool operator !=(NextInput left, NextInput right)
     {
         return !(left == right);
+    }
+}
+
+public class NextInputKindJsonConverter : JsonConverter<NextInputKind>
+{
+    public override NextInputKind Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        string value = reader.GetString()!;
+        return Enum.TryParse<NextInputKind>(value, true, out var result) ? result : throw new JsonException($"Value '{value}' is not valid for enum type {nameof(NextInputKind)}.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, NextInputKind value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString().LowercaseFirst());
+    }
+}
+
+public class NextInputJsonConverter : JsonConverter<NextInput>
+{
+    public override NextInput Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException("Expected StartObject token.");
+        }
+
+        var document = JsonDocument.ParseValue(ref reader);
+        var root = document.RootElement;
+
+        NextInputKind kind = default;
+        Input input = default!;
+        Item? actorMonItem = null;
+
+        if (root.TryGetProperty("kind", out var kindElement))
+        {
+            foreach (var kindProperty in kindElement.EnumerateObject())
+            {
+                kind = Enum.Parse<NextInputKind>(kindProperty.Name, true);
+                break;
+            }
+        }
+
+        if (root.TryGetProperty("input", out var inputElement))
+        {
+            input = JsonSerializer.Deserialize<Input>(inputElement.GetRawText(), options)!;
+        }
+
+        if (root.TryGetProperty("actorMonItem", out var actorMonItemElement))
+        {
+            actorMonItem = JsonSerializer.Deserialize<Item>(actorMonItemElement.GetRawText(), options);
+        }
+
+        return new NextInput(input!, kind, actorMonItem);
+    }
+
+    public override void Write(Utf8JsonWriter writer, NextInput value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        writer.WritePropertyName("kind");
+        writer.WriteStartObject();
+        writer.WritePropertyName(value.Kind.ToString().LowercaseFirst());
+        writer.WriteStartObject();
+        writer.WriteEndObject();
+        writer.WriteEndObject();
+        if (value.ActorMonItem.HasValue)
+        {
+            writer.WritePropertyName("actorMonItem");
+            JsonSerializer.Serialize(writer, value.ActorMonItem.Value, options);
+        }
+        writer.WritePropertyName("input");
+        JsonSerializer.Serialize(writer, value.Input, options);
+        writer.WriteEndObject();
     }
 }

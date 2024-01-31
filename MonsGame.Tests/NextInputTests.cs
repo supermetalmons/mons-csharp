@@ -67,4 +67,33 @@ public class NextInputTests
 
         Assert.Equal(nextInput1.GetHashCode(), nextInput2.GetHashCode());
     }
+
+    [Fact]
+    public void NextInput_Serialization_Deserialization_SpiritTargetMove_Test()
+    {
+        string json = "{\"kind\":{\"spiritTargetMove\":{}},\"input\":{\"location\":{\"_0\":{\"i\":0,\"j\":4}}}}";
+        var deserializedInput = JsonSerializer.Deserialize<NextInput>(json, JsonOptions.DefaultSerializerOptions);
+        string jsonBack = JsonSerializer.Serialize(deserializedInput, JsonOptions.DefaultSerializerOptions);
+        Assert.Equal(json, jsonBack);
+    }
+
+    [Fact]
+    public void NextInput_Serialization_Deserialization_MonMove_Test()
+    {
+        string json = "{\"kind\":{\"monMove\":{}},\"input\":{\"location\":{\"_0\":{\"i\":9,\"j\":6}}}}";
+        var deserializedInput = JsonSerializer.Deserialize<NextInput>(json, JsonOptions.DefaultSerializerOptions);
+        string jsonBack = JsonSerializer.Serialize(deserializedInput, JsonOptions.DefaultSerializerOptions);
+        Assert.Equal(json, jsonBack);
+    }
+
+    [Fact]
+    public void NextInput_Serialization_Deserialization_SelectConsumable_Test()
+    {
+        string json = "{\"kind\":{\"selectConsumable\":{}},\"actorMonItem\":{\"mon\":{\"mon\":{\"color\":\"black\",\"cooldown\":0,\"kind\":\"mystic\"}}},\"input\":{\"modifier\":{\"_0\":\"selectBomb\"}}}";
+        var deserializedInput = JsonSerializer.Deserialize<NextInput>(json, JsonOptions.DefaultSerializerOptions);
+        string jsonBack = JsonSerializer.Serialize(deserializedInput, JsonOptions.DefaultSerializerOptions);
+        Assert.Equal(json, jsonBack);
+    }
+
+
 }
