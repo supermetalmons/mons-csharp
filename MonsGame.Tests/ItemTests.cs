@@ -82,4 +82,47 @@ public class ItemTests
 
         Assert.Equal(item1.GetHashCode(), item2.GetHashCode());
     }
+
+    [Fact]
+    public void SerializeDeserialize_MonWithConsumable_ShouldMatch()
+    {
+        string json = "{\"monWithConsumable\":{\"consumable\":\"bomb\",\"mon\":{\"color\":\"white\",\"cooldown\":0,\"kind\":\"mystic\"}}}";
+        PerformRoundTripTest(json);
+    }
+
+    [Fact]
+    public void SerializeDeserialize_MonWithMana_ShouldMatch()
+    {
+        string json = "{\"monWithMana\":{\"mana\":{\"regular\":{\"color\":\"black\"}},\"mon\":{\"color\":\"white\",\"cooldown\":0,\"kind\":\"drainer\"}}}";
+        PerformRoundTripTest(json);
+    }
+
+    [Fact]
+    public void SerializeDeserialize_Mana_ShouldMatch()
+    {
+        string json = "{\"mana\":{\"mana\":{\"regular\":{\"color\":\"black\"}}}}";
+        PerformRoundTripTest(json);
+    }
+
+    [Fact]
+    public void SerializeDeserialize_Consumable_ShouldMatch()
+    {
+        string json = "{\"consumable\":{\"consumable\":\"bombOrPotion\"}}";
+        PerformRoundTripTest(json);
+    }
+
+    [Fact]
+    public void SerializeDeserialize_Mon_ShouldMatch()
+    {
+        string json = "{\"mon\":{\"mon\":{\"color\":\"white\",\"cooldown\":0,\"kind\":\"spirit\"}}}";
+        PerformRoundTripTest(json);
+    }
+
+    private void PerformRoundTripTest(string json)
+    {
+        var deserializedInput = JsonSerializer.Deserialize<Item>(json, JsonOptions.DefaultSerializerOptions);
+        string jsonBack = JsonSerializer.Serialize(deserializedInput, JsonOptions.DefaultSerializerOptions);
+        Assert.Equal(json, jsonBack);
+    }
+
 }
