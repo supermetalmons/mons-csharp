@@ -110,7 +110,6 @@ public partial class Game
         return new EventsOutput(events);
     }
 
-
     // MARK: - process step by step
 
     private Output SuggestedInputToStartWith()
@@ -145,7 +144,6 @@ public partial class Game
             return new LocationsToStartFromOutput(suggestedLocations);
         }
     }
-
 
     private HashSet<NextInput> SecondInputOptions(Location startLocation, Item startItem, bool onlyOne, Input? specificNext)
     {
@@ -220,8 +218,7 @@ public partial class Game
         return secondInputOptions;
     }
 
-
-    private (HashSet<Event>, HashSet<NextInput>)? ProcessSecondInput(NextInputKind kind, Item startItem, Location startLocation, Location targetLocation, Input? specificNext)
+    private (List<Event>, List<NextInput>)? ProcessSecondInput(NextInputKind kind, Item startItem, Location startLocation, Location targetLocation, Input? specificNext)
     {
         Location? specificLocation = null;
         if (specificNext is Input.LocationInput locationInput)
@@ -229,21 +226,21 @@ public partial class Game
             specificLocation = locationInput.Location;
         }
 
-        HashSet<NextInput> thirdInputOptions = new HashSet<NextInput>();
-        HashSet<Event> events = new HashSet<Event>();
-        Square targetSquare = Board.SquareAt(targetLocation);
-        var targetItem = Board.GetItem(targetLocation); // Adjusted to fit the updated method signature
+        var thirdInputOptions = new List<NextInput>();
+        var events = new List<Event>();
+        var targetSquare = Board.SquareAt(targetLocation);
+        var targetItem = Board.GetItem(targetLocation);
 
         switch (kind)
         {
             case NextInputKind.MonMove:
                 if (!startItem.MonProperty.HasValue) return null;
+                var startMon = startItem.MonProperty.Value;
                 events.Add(new MonMoveEvent(startItem, startLocation, targetLocation));
 
                 if (targetItem.HasValue)
                 {
-                    var targetItemType = targetItem.Value.Type;
-                    switch (targetItemType)
+                    switch (targetItem.Value.Type)
                     {
                         case ItemType.Mon:
                         case ItemType.MonWithMana:
@@ -251,41 +248,34 @@ public partial class Game
                             return null;
 
                         case ItemType.Mana:
-                            var mana = targetItem.Value.ManaProperty;
                             if (startItem.ManaProperty.HasValue)
                             {
                                 var startMana = startItem.ManaProperty.Value;
                                 if (startMana.Type == ManaType.Supermana)
                                 {
-                                    // events.Add(new Event { Type = Event.EventType.SupermanaBackToBase }); // This needs specific event creation
+                                    events.Add(new SupermanaBackToBaseEvent(startLocation, Board.SupermanaBase));
                                 }
                                 else
                                 {
-                                    // events.Add(new Event { Type = Event.EventType.ManaDropped }); // This needs specific event creation
+                                    events.Add(new ManaDroppedEvent(startMana, startLocation));
                                 }
                             }
-                            // events.Add(new Event { Type = Event.EventType.PickupMana }); // This needs specific event creation
+                            events.Add(new PickupManaEvent(targetItem.Value.Mana, startMon, targetLocation));
                             break;
 
                         case ItemType.Consumable:
                             var consumable = targetItem.Value.ConsumableProperty;
-                            switch (consumable)
+                            if (consumable == Consumable.BombOrPotion)
                             {
-                                case Consumable.Potion:
-                                case Consumable.Bomb:
-                                    return null;
-
-                                case Consumable.BombOrPotion:
-                                    if (startItem.ConsumableProperty.HasValue || startItem.ManaProperty.HasValue)
-                                    {
-                                        // events.Add(new Event { Type = Event.EventType.PickupPotion }); // This needs specific event creation
-                                    }
-                                    else
-                                    {
-                                        thirdInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, startItem));
-                                        thirdInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, startItem));
-                                    }
-                                    break;
+                                if (startItem.ConsumableProperty.HasValue || startItem.ManaProperty.HasValue)
+                                {
+                                    events.Add(new PickupPotionEvent(startItem, targetLocation));
+                                }
+                                else
+                                {
+                                    thirdInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, startItem));
+                                    thirdInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, startItem));
+                                }
                             }
                             break;
                     }
@@ -293,13 +283,87 @@ public partial class Game
 
                 if (targetSquare.Type == SquareType.ManaPool && startItem.ManaProperty.HasValue)
                 {
-                    // events.Add(new Event { Type = Event.EventType.ManaScored }); // This needs specific event creation
+                    events.Add(new ManaScoredEvent(startItem.ManaProperty.Value, targetLocation));
                 }
                 break;
 
             case NextInputKind.ManaMove:
-                // Implementation for ManaMove, assuming it follows a similar pattern to MonMove.
+                if (!startItem.ManaProperty.HasValue) return null;
+                var mana = startItem.ManaProperty.Value;
+                events.Add(new ManaMoveEvent(mana, startLocation, targetLocation));
+
+                if (targetItem.HasValue)
+                {
+                    switch (targetItem.Value.Type)
+                    {
+                        case ItemType.Mon:
+                            events.Add(new PickupManaEvent(mana, targetItem.Value.Mon, targetLocation));
+                            break;
+                        case ItemType.Mana:
+                        case ItemType.Consumable:
+                        case ItemType.MonWithMana:
+                        case ItemType.MonWithConsumable:
+                            return null;
+                    }
+                }
+
+                switch (targetSquare.Type)
+                {
+                    case SquareType.ManaBase:
+                    case SquareType.ConsumableBase:
+                    case SquareType.Regular:
+                        break;
+                    case SquareType.ManaPool:
+                        events.Add(new ManaScoredEvent(mana, targetLocation));
+                        break;
+                    case SquareType.MonBase:
+                    case SquareType.SupermanaBase:
+                        return null;
+                }
                 break;
+
+            case NextInputKind.MysticAction:
+                if (!startItem.MonProperty.HasValue) return null;
+                events.Add(new MysticActionEvent(startItem.Mon, startLocation, targetLocation));
+
+                if (targetItem.HasValue)
+                {
+                    switch (targetItem.Value.Type)
+                    {
+                        case ItemType.Mon:
+                            var targetMon = targetItem.Value.Mon;
+                            events.Add(new MonFaintedEvent(targetMon, targetLocation, Board.Base(targetMon)));
+                            break;
+                        case ItemType.MonWithMana:
+                            var targetMonWithMana = targetItem.Value.Mon;
+                            var manaWithMon = targetItem.Value.Mana;
+                            events.Add(new MonFaintedEvent(targetMonWithMana, targetLocation, Board.Base(targetMonWithMana)));
+                            if (manaWithMon.Type == ManaType.Regular)
+                            {
+                                events.Add(new ManaDroppedEvent(manaWithMon, targetLocation));
+                            }
+                            else if (manaWithMon.Type == ManaType.Supermana)
+                            {
+                                events.Add(new SupermanaBackToBaseEvent(targetLocation, Board.SupermanaBase));
+                            }
+                            break;
+                        case ItemType.MonWithConsumable:
+                            var targetMonWithConsumable = targetItem.Value.Mon;
+                            events.Add(new MonFaintedEvent(targetMonWithConsumable, targetLocation, Board.Base(targetMonWithConsumable)));
+                            if (targetItem.Value.ConsumableProperty == Consumable.Bomb)
+                            {
+                                events.Add(new BombExplosionEvent(targetLocation));
+                            }
+                            break;
+                        case ItemType.Consumable:
+                        case ItemType.Mana:
+                            return null;
+                    }
+                }
+                break;
+
+                // Handle other cases (DemonAction, etc.) similarly, creating and adding events based on the game logic
+
         }
 
         return (events, thirdInputOptions);
@@ -569,7 +633,6 @@ public partial class Game
         return events.Concat(extraEvents).ToList();
     }
 
-
     // MARK: - helpers
 
     public List<NextInput> NextInputs(IEnumerable<Location> locations, NextInputKind kind, bool onlyOne, Location? specific, Func<Location, bool> filter)
@@ -602,7 +665,6 @@ public partial class Game
         }
         return inputs;
     }
-
 
     public Dictionary<AvailableMoveKind, int> AvailableMoveKinds(int monsMovesCount, int actionsUsedCount, int manaMovesCount, int playerPotionsCount, int turnNumber)
     {
