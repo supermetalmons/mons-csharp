@@ -705,80 +705,74 @@ public partial class Game
                 {
                     var destinationItem = Board.GetItem(location);
                     var destinationSquare = Board.SquareAt(location);
-
-                    bool isValidLocation = false;
-
                     if (destinationItem.HasValue)
                     {
                         switch (destinationItem.Value.Type)
                         {
                             case ItemType.Mon:
-                                if (targetItem.Value.Type == ItemType.Mana && destinationItem.Value.MonProperty.HasValue &&
-                                    destinationItem.Value.Mon.kind == Mon.Kind.Drainer && !destinationItem.Value.MonProperty.Value.isFainted)
+                                var destinationMon = destinationItem.Value.Mon;
+                                if (targetItem.Value.Type == ItemType.Mon || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.MonWithConsumable)
                                 {
-                                    isValidLocation = true;
+                                    continue;
                                 }
-                                else if (targetItem.Value.Type == ItemType.Consumable && targetItem.Value.ConsumableProperty == Consumable.BombOrPotion)
+                                if (targetItem.Value.Type == ItemType.Mana && (destinationMon.kind != Mon.Kind.Drainer || destinationMon.isFainted))
                                 {
-                                    isValidLocation = true;
+                                    continue;
+                                }
+                                if (targetItem.Value.Type == ItemType.Consumable && targetItem.Value.Consumable != Consumable.BombOrPotion)
+                                {
+                                    continue;
                                 }
                                 break;
 
                             case ItemType.Mana:
-                                if (targetItem.Value.Type == ItemType.Mon && targetItem.Value.MonProperty.HasValue &&
-                                    targetItem.Value.Mon.kind == Mon.Kind.Drainer && !targetItem.Value.MonProperty.Value.isFainted)
+                                if (targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.kind != Mon.Kind.Drainer || targetItem.Value.Mon.isFainted)
                                 {
-                                    isValidLocation = true;
+                                    continue;
+                                }
+                                if (targetItem.Value.Type == ItemType.Consumable || targetItem.Value.Type == ItemType.MonWithConsumable || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.Mana)
+                                {
+                                    continue;
                                 }
                                 break;
 
                             case ItemType.MonWithMana:
                             case ItemType.MonWithConsumable:
-                                if (targetItem.Value.Type == ItemType.Consumable && targetItem.Value.ConsumableProperty == Consumable.BombOrPotion)
+                                if (targetItem.Value.Type == ItemType.Consumable && targetItem.Value.Consumable != Consumable.BombOrPotion)
                                 {
-                                    isValidLocation = true;
+                                    continue;
+                                }
+                                if (targetItem.Value.Type == ItemType.Mon || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.MonWithConsumable || targetItem.Value.Type == ItemType.Mana)
+                                {
+                                    continue;
                                 }
                                 break;
 
                             case ItemType.Consumable:
-                                if ((targetItem.Value.Type == ItemType.Mon || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.MonWithConsumable) &&
-                                    destinationItem.Value.ConsumableProperty == Consumable.BombOrPotion)
+                                var destinationConsumable = destinationItem.Value.ConsumableProperty;
+                                if ((targetItem.Value.Type == ItemType.Mon || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.MonWithConsumable) && destinationConsumable != Consumable.BombOrPotion)
                                 {
-                                    isValidLocation = true;
+                                    continue;
+                                }
+                                if (targetItem.Value.Type == ItemType.Mana || targetItem.Value.Type == ItemType.Consumable)
+                                {
+                                    continue;
                                 }
                                 break;
                         }
                     }
 
-                    if (!isValidLocation)
+                    bool isValidLocation = destinationSquare.Type switch
                     {
-                        switch (destinationSquare.Type)
-                        {
-                            case SquareType.Regular:
-                            case SquareType.ConsumableBase:
-                            case SquareType.ManaBase:
-                            case SquareType.ManaPool:
-                                isValidLocation = true;
-                                break;
+                        SquareType.Regular => true,
+                        SquareType.ConsumableBase => true,
+                        SquareType.ManaBase => true,
+                        SquareType.ManaPool => true,
+                        SquareType.SupermanaBase => (targetItem.Value.Type == ItemType.Mana && targetItem.Value.Mana.Type == ManaType.Supermana) || (targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.kind == Mon.Kind.Drainer && destinationItem.HasValue && destinationItem.Value.ManaProperty.HasValue && destinationItem.Value.ManaProperty.Value.Type == ManaType.Supermana),
+                        SquareType.MonBase => targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.kind == destinationSquare.Kind && targetItem.Value.Mon.color == destinationSquare.Color && !targetItem.Value.ManaProperty.HasValue && !targetItem.Value.ConsumableProperty.HasValue,
+                        _ => false,
+                    };
 
-                            case SquareType.SupermanaBase:
-                                if ((targetItem.Value.Type == ItemType.Mana && targetItem.Value.ManaProperty.HasValue && targetItem.Value.ManaProperty.Value.Type == ManaType.Supermana) ||
-                                    (targetItem.Value.Type == ItemType.Mon && targetItem.Value.MonProperty.HasValue && targetItem.Value.Mon.kind == Mon.Kind.Drainer && destinationItem.HasValue && destinationItem.Value.ManaProperty.HasValue && destinationItem.Value.ManaProperty.Value.Type == ManaType.Supermana))
-                                {
-                                    isValidLocation = true;
-                                }
-                                break;
-
-                            case SquareType.MonBase:
-                                if (targetItem.Value.Type == ItemType.Mon && targetItem.Value.MonProperty.HasValue &&
-                                    targetItem.Value.Mon.kind == destinationSquare.Kind && targetItem.Value.Mon.color == destinationSquare.Color &&
-                                    !targetItem.Value.ManaProperty.HasValue && !targetItem.Value.ConsumableProperty.HasValue)
-                                {
-                                    isValidLocation = true;
-                                }
-                                break;
-                        }
-                    }
 
                     if (isValidLocation)
                     {
