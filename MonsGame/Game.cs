@@ -362,7 +362,118 @@ public partial class Game
                 }
                 break;
 
-                // Handle other cases (DemonAction, etc.) similarly, creating and adding events based on the game logic
+            case NextInputKind.DemonAction:
+                if (!startItem.MonProperty.HasValue) return null;
+                var startDemonMon = startItem.MonProperty.Value;
+                events.Add(new DemonActionEvent(startDemonMon, startLocation, targetLocation));
+                bool requiresAdditionalStep = false;
+
+                if (targetItem.HasValue)
+                {
+                    switch (targetItem.Value.Type)
+                    {
+                        case ItemType.Mana:
+                        case ItemType.Consumable:
+                            return null;
+
+                        case ItemType.Mon:
+                            var targetMon = targetItem.Value.Mon;
+                            events.Add(new MonFaintedEvent(targetMon, targetLocation, Board.Base(targetMon)));
+                            break;
+
+                        case ItemType.MonWithMana:
+                            var targetMonWithMana = targetItem.Value.Mon;
+                            var manaLost = targetItem.Value.Mana;
+                            events.Add(new MonFaintedEvent(targetMonWithMana, targetLocation, Board.Base(targetMonWithMana)));
+                            if (manaLost.Type == ManaType.Regular)
+                            {
+                                requiresAdditionalStep = true;
+                                events.Add(new ManaDroppedEvent(manaLost, targetLocation));
+                            }
+                            else if (manaLost.Type == ManaType.Supermana)
+                            {
+                                events.Add(new SupermanaBackToBaseEvent(targetLocation, Board.SupermanaBase));
+                            }
+                            break;
+
+                        case ItemType.MonWithConsumable:
+                            var targetMonWithConsumable = targetItem.Value.Mon;
+                            var consumable = targetItem.Value.ConsumableProperty;
+                            events.Add(new MonFaintedEvent(targetMonWithConsumable, targetLocation, Board.Base(targetMonWithConsumable)));
+                            if (consumable == Consumable.Bomb)
+                            {
+                                events.Add(new BombExplosionEvent(targetLocation));
+                                events.Add(new MonFaintedEvent(startDemonMon, targetLocation, Board.Base(startDemonMon)));
+                            }
+                            break;
+                    }
+                }
+
+                switch (targetSquare.Type)
+                {
+                    case SquareType.Regular:
+                    case SquareType.ConsumableBase:
+                    case SquareType.ManaBase:
+                    case SquareType.ManaPool:
+                        break;
+
+                    case SquareType.SupermanaBase:
+                    case SquareType.MonBase:
+                        requiresAdditionalStep = true;
+                        break;
+                }
+
+                if (requiresAdditionalStep)
+                {
+                    var nearbyLocations = targetLocation.NearbyLocations;
+
+                    foreach (var location in nearbyLocations)
+                    {
+                        var item = Board.GetItem(location);
+                        var square = Board.SquareAt(location);
+                        bool isEligibleLocation = false;
+
+                        if (item.HasValue)
+                        {
+                            switch (item.Value.Type)
+                            {
+                                case ItemType.Mon:
+                                case ItemType.Mana:
+                                case ItemType.MonWithMana:
+                                case ItemType.MonWithConsumable:
+                                    continue;
+                                case ItemType.Consumable:
+                                    break;
+                            }
+                        }
+
+                        switch (square.Type)
+                        {
+                            case SquareType.Regular:
+                            case SquareType.ConsumableBase:
+                            case SquareType.ManaBase:
+                            case SquareType.ManaPool:
+                                isEligibleLocation = true;
+                                break;
+                            case SquareType.MonBase:
+                                isEligibleLocation = (startDemonMon.kind == square.Kind && startDemonMon.color == square.Color);
+                                break;
+                            case SquareType.SupermanaBase:
+                                isEligibleLocation = false;
+                                break;
+                        }
+
+                        if (isEligibleLocation)
+                        {
+                            var nextInput = new NextInput(new Input.LocationInput(location), NextInputKind.DemonAdditionalStep);
+                            thirdInputOptions.Add(nextInput);
+                        }
+                    }
+                }
+
+                break;
+
+                // Handle other cases similarly, creating and adding events based on the game logic
 
         }
 
