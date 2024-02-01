@@ -268,9 +268,12 @@ public partial class Game
 
                                 return item.Value.Type switch
                                 {
-                                    ItemType.Mon => item.Value.Mon.color != mon.color && !item.Value.Mon.isFainted,
+                                    ItemType.Mon => item.Value.MonProperty.HasValue && item.Value.MonProperty.Value.color != mon.color && !item.Value.MonProperty.Value.isFainted,
+                                    ItemType.MonWithMana => item.Value.MonProperty.HasValue && item.Value.MonProperty.Value.color != mon.color && !item.Value.MonProperty.Value.isFainted,
+                                    ItemType.MonWithConsumable => item.Value.MonProperty.HasValue && item.Value.MonProperty.Value.color != mon.color && !item.Value.MonProperty.Value.isFainted,
                                     _ => false,
                                 };
+
                             });
                             secondInputOptions.AddRange(demonActions);
                             break;
@@ -871,7 +874,7 @@ public partial class Game
                             case ItemType.Mon:
                             case ItemType.MonWithMana:
                             case ItemType.MonWithConsumable:
-                                 return null;
+                                return null;
                             case ItemType.Mana:
                                 var destinationMana = destinationItem.Value.Mana;
                                 events.Add(new PickupManaEvent(destinationMana, travellingMon, destinationLocation));
