@@ -473,6 +473,95 @@ public partial class Game
 
                 break;
 
+            case NextInputKind.SpiritTargetCapture:
+                if (!targetItem.HasValue) return null;
+                foreach (var location in targetLocation.NearbyLocations)
+                {
+                    var destinationItem = Board.GetItem(location);
+                    var destinationSquare = Board.SquareAt(location);
+
+                    bool isValidLocation = false;
+
+                    if (destinationItem.HasValue)
+                    {
+                        switch (destinationItem.Value.Type)
+                        {
+                            case ItemType.Mon:
+                                if (targetItem.Value.Type == ItemType.Mana && destinationItem.Value.MonProperty.HasValue &&
+                                    destinationItem.Value.Mon.kind == Mon.Kind.Drainer && !destinationItem.Value.MonProperty.Value.isFainted)
+                                {
+                                    isValidLocation = true;
+                                }
+                                else if (targetItem.Value.Type == ItemType.Consumable && targetItem.Value.ConsumableProperty == Consumable.BombOrPotion)
+                                {
+                                    isValidLocation = true;
+                                }
+                                break;
+
+                            case ItemType.Mana:
+                                if (targetItem.Value.Type == ItemType.Mon && targetItem.Value.MonProperty.HasValue &&
+                                    targetItem.Value.Mon.kind == Mon.Kind.Drainer && !targetItem.Value.MonProperty.Value.isFainted)
+                                {
+                                    isValidLocation = true;
+                                }
+                                break;
+
+                            case ItemType.MonWithMana:
+                            case ItemType.MonWithConsumable:
+                                if (targetItem.Value.Type == ItemType.Consumable && targetItem.Value.ConsumableProperty == Consumable.BombOrPotion)
+                                {
+                                    isValidLocation = true;
+                                }
+                                break;
+
+                            case ItemType.Consumable:
+                                if ((targetItem.Value.Type == ItemType.Mon || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.MonWithConsumable) &&
+                                    destinationItem.Value.ConsumableProperty == Consumable.BombOrPotion)
+                                {
+                                    isValidLocation = true;
+                                }
+                                break;
+                        }
+                    }
+
+                    if (!isValidLocation)
+                    {
+                        switch (destinationSquare.Type)
+                        {
+                            case SquareType.Regular:
+                            case SquareType.ConsumableBase:
+                            case SquareType.ManaBase:
+                            case SquareType.ManaPool:
+                                isValidLocation = true;
+                                break;
+
+                            case SquareType.SupermanaBase:
+                                if ((targetItem.Value.Type == ItemType.Mana && targetItem.Value.ManaProperty.HasValue && targetItem.Value.ManaProperty.Value.Type == ManaType.Supermana) ||
+                                    (targetItem.Value.Type == ItemType.Mon && targetItem.Value.MonProperty.HasValue && targetItem.Value.Mon.kind == Mon.Kind.Drainer && destinationItem.HasValue && destinationItem.Value.ManaProperty.HasValue && destinationItem.Value.ManaProperty.Value.Type == ManaType.Supermana))
+                                {
+                                    isValidLocation = true;
+                                }
+                                break;
+
+                            case SquareType.MonBase:
+                                if (targetItem.Value.Type == ItemType.Mon && targetItem.Value.MonProperty.HasValue &&
+                                    targetItem.Value.Mon.kind == destinationSquare.Kind && targetItem.Value.Mon.color == destinationSquare.Color &&
+                                    !targetItem.Value.ManaProperty.HasValue && !targetItem.Value.ConsumableProperty.HasValue)
+                                {
+                                    isValidLocation = true;
+                                }
+                                break;
+                        }
+                    }
+
+                    if (isValidLocation)
+                    {
+                        var nextInput = new NextInput(new Input.LocationInput(location), NextInputKind.SpiritTargetMove);
+                        thirdInputOptions.Add(nextInput);
+                    }
+                }
+                break;
+
                 // Handle other cases similarly, creating and adding events based on the game logic
 
         }
