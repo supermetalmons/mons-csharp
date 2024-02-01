@@ -305,8 +305,6 @@ public partial class Game
         return (events, thirdInputOptions);
     }
 
-
-
     private (List<Event>, List<NextInput>)? ProcessThirdInput(NextInput thirdInput, Item startItem, Location startLocation, Location targetLocation)
     {
         var targetItem = Board.GetItem(targetLocation);
@@ -330,58 +328,57 @@ public partial class Game
                 var destinationItem = Board.GetItem(destinationLocation);
                 var destinationSquare = Board.SquareAt(destinationLocation);
 
-                // events.Add(new SpiritTargetMoveEvent(targetItem, targetLocation, destinationLocation));
+                events.Add(new SpiritTargetMoveEvent(targetItem.Value, targetLocation, destinationLocation));
 
-                if (destinationItem != null)
+                if (destinationItem.HasValue)
                 {
-                    switch (targetItem.Value.Type)
+                    switch (destinationItem.Value.Type)
                     {
-                        case ItemType.Mon when destinationItem?.Type is ItemType.Mana:
-                            // events.Add(new PickupManaEvent(destinationItem.Mana, targetItem.Mon, destinationLocation));
+                        case ItemType.Mon:
+                        case ItemType.MonWithMana:
+                        case ItemType.MonWithConsumable:
+                            return null;
+
+                        case ItemType.Mana:
+                            events.Add(new PickupManaEvent(destinationItem.Value.Mana, targetItem.Value.Mon, destinationLocation));
                             break;
 
-                        case ItemType.Mon when destinationItem?.Type is ItemType.Consumable && destinationItem?.Consumable == Consumable.BombOrPotion:
-                            forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, targetItem));
-                            forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, targetItem));
-                            break;
-
-                        case ItemType.Mana when destinationItem?.Type is ItemType.Mon:
-                            // events.Add(new PickupManaEvent(targetItem.Mana, destinationItem?.MonProperty, destinationLocation));
-                            break;
-
-                        case ItemType.Consumable when destinationItem?.Type is ItemType.Mon && targetItem?.Consumable == Consumable.BombOrPotion:
-                            forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, destinationItem));
-                            forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, destinationItem));
+                        case ItemType.Consumable:
+                            var destinationConsumable = destinationItem.Value.ConsumableProperty;
+                            if (destinationConsumable == Consumable.BombOrPotion)
+                            {
+                                forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, targetItem.Value));
+                                forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, targetItem.Value));
+                            }
                             break;
                     }
+                }
 
-                    if (destinationSquare.Type == SquareType.ManaPool && targetItem!.Value.ManaProperty != null)
-                    {
-                        // events.Add(new ManaScoredEvent(targetItem.Mana, destinationLocation));
-                    }
+                if (destinationSquare.Type == SquareType.ManaPool && targetItem.Value.ManaProperty.HasValue)
+                {
+                    events.Add(new ManaScoredEvent(targetItem.Value.ManaProperty.Value, destinationLocation));
                 }
                 break;
 
             case NextInputKind.DemonAdditionalStep:
-                if (thirdInput.Input is not Input.LocationInput demonStepInput || startItem.MonProperty == null) return null;
-                var destinationLocationDemonStep = demonStepInput.Location;
-                events.Add(new DemonAdditionalStepEvent(startItem.Mon, targetLocation, destinationLocationDemonStep));
+                if (!(thirdInput.Input is Input.LocationInput demonLocationInput) || !startItem.MonProperty.HasValue) return null;
+                var destinationLocationDemonStep = demonLocationInput.Location;
+                events.Add(new DemonAdditionalStepEvent(startItem.MonProperty.Value, targetLocation, destinationLocationDemonStep));
 
-                var itemAtDestination = Board.GetItem(destinationLocationDemonStep);
-                if (itemAtDestination?.Type == ItemType.Consumable && itemAtDestination?.Consumable == Consumable.BombOrPotion)
+                var itemAtDestinationDemonStep = Board.GetItem(destinationLocationDemonStep);
+                if (itemAtDestinationDemonStep.HasValue && itemAtDestinationDemonStep.Value.Type == ItemType.Consumable && itemAtDestinationDemonStep.Value.ConsumableProperty == Consumable.BombOrPotion)
                 {
                     forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, startItem));
                     forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, startItem));
                 }
                 break;
 
-
             case NextInputKind.SelectConsumable:
-                if (!(thirdInput.Input is Input.ModifierInput modifierInput) || startItem.MonProperty == null) return null;
+                if (!(thirdInput.Input is Input.ModifierInput modifierInput) || !startItem.MonProperty.HasValue) return null;
                 switch (modifierInput.Modifier)
                 {
                     case Modifier.SelectBomb:
-                        events.Add(new PickupBombEvent(startItem.Mon, targetLocation));
+                        events.Add(new PickupBombEvent(startItem.MonProperty.Value, targetLocation));
                         break;
                     case Modifier.SelectPotion:
                         events.Add(new PickupPotionEvent(startItem, targetLocation));
