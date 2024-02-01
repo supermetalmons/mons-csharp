@@ -562,7 +562,53 @@ public partial class Game
                 }
                 break;
 
-                // Handle other cases similarly, creating and adding events based on the game logic
+            case NextInputKind.BombAttack:
+                if (!startItem.MonProperty.HasValue) return null;
+                var startBombMon = startItem.MonProperty.Value;
+                events.Add(new BombAttackEvent(startBombMon, startLocation, targetLocation));
+
+                if (targetItem.HasValue)
+                {
+                    switch (targetItem.Value.Type)
+                    {
+                        case ItemType.Mon:
+                            var mon = targetItem.Value.Mon;
+                            events.Add(new MonFaintedEvent(mon, targetLocation, Board.Base(mon)));
+                            break;
+                        case ItemType.MonWithMana:
+                            var monWithMana = targetItem.Value.Mon;
+                            var manaBombLost = targetItem.Value.Mana;
+                            events.Add(new MonFaintedEvent(monWithMana, targetLocation, Board.Base(monWithMana)));
+                            if (manaBombLost.Type == ManaType.Regular)
+                            {
+                                events.Add(new ManaDroppedEvent(manaBombLost, targetLocation));
+                            }
+                            else if (manaBombLost.Type == ManaType.Supermana)
+                            {
+                                events.Add(new SupermanaBackToBaseEvent(targetLocation, Board.SupermanaBase));
+                            }
+                            break;
+                        case ItemType.MonWithConsumable:
+                            var monWithConsumable = targetItem.Value.Mon;
+                            var consumable = targetItem.Value.ConsumableProperty;
+                            events.Add(new MonFaintedEvent(monWithConsumable, targetLocation, Board.Base(monWithConsumable)));
+                            if (consumable == Consumable.Bomb)
+                            {
+                                events.Add(new BombExplosionEvent(targetLocation));
+                            }
+                            break;
+                        case ItemType.Mana:
+                        case ItemType.Consumable:
+                            break;
+                    }
+                }
+
+                break;
+
+            case NextInputKind.SpiritTargetMove:
+            case NextInputKind.DemonAdditionalStep:
+            case NextInputKind.SelectConsumable:
+                return null;
 
         }
 
