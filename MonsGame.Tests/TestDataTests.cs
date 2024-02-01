@@ -158,9 +158,6 @@ public class TestDataTests
                     Console.WriteLine("Strings have different lengths.");
                 }
 
-
-
-
             }
 
             Console.WriteLine("\n\n");

@@ -237,7 +237,7 @@ public partial class Game
 
                     if (onlyOne && secondInputOptions.Any()) return secondInputOptions;
                 }
-                
+
                 if (Board.SquareAt(startLocation).Type != SquareType.MonBase && PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount), ActionsUsedCount))
                 {
                     switch (mon.kind)
@@ -855,7 +855,6 @@ public partial class Game
 
             case NextInputKind.SpiritTargetMove:
                 if (!(thirdInput.Input is Input.LocationInput locationInput) || targetItem == null) return null;
-
                 var destinationLocation = locationInput.Location;
                 var destinationItem = Board.GetItem(destinationLocation);
                 var destinationSquare = Board.SquareAt(destinationLocation);
@@ -864,26 +863,114 @@ public partial class Game
 
                 if (destinationItem.HasValue)
                 {
-                    switch (destinationItem.Value.Type)
+                    if (targetItem.Value.Type == ItemType.Mon)
                     {
-                        case ItemType.Mon:
-                        case ItemType.MonWithMana:
-                        case ItemType.MonWithConsumable:
-                            return null;
-
-                        case ItemType.Mana:
-                            events.Add(new PickupManaEvent(destinationItem.Value.Mana, targetItem.Value.Mon, destinationLocation));
-                            break;
-
-                        case ItemType.Consumable:
-                            var destinationConsumable = destinationItem.Value.ConsumableProperty;
-                            if (destinationConsumable == Consumable.BombOrPotion)
-                            {
-                                forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, targetItem.Value));
-                                forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, targetItem.Value));
-                            }
-                            break;
+                        var travellingMon = targetItem.Value.Mon;
+                        switch (destinationItem.Value.Type)
+                        {
+                            case ItemType.Mon:
+                            case ItemType.MonWithMana:
+                            case ItemType.MonWithConsumable:
+                                 return null;
+                            case ItemType.Mana:
+                                var destinationMana = destinationItem.Value.Mana;
+                                events.Add(new PickupManaEvent(destinationMana, travellingMon, destinationLocation));
+                                break;
+                            case ItemType.Consumable:
+                                var destinationConsumable = destinationItem.Value.Consumable;
+                                if (destinationConsumable == Consumable.BombOrPotion)
+                                {
+                                    forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, targetItem));
+                                    forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, targetItem));
+                                }
+                                else
+                                {
+                                    return null;
+                                }
+                                break;
+                        }
                     }
+                    else if (targetItem.Value.Type == ItemType.Mana)
+                    {
+                        var travellingMana = targetItem.Value.Mana;
+                        if (destinationItem.Value.Type == ItemType.Mon)
+                        {
+                            var destinationMon = destinationItem.Value.Mon;
+                            events.Add(new PickupManaEvent(travellingMana, destinationMon, destinationLocation));
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else if (targetItem.Value.Type == ItemType.MonWithMana)
+                    {
+                        switch (destinationItem.Value.Type)
+                        {
+                            case ItemType.Mon:
+                            case ItemType.Mana:
+                            case ItemType.MonWithMana:
+                            case ItemType.MonWithConsumable:
+                                return null;
+                            case ItemType.Consumable:
+                                if (destinationItem.Value.Consumable == Consumable.BombOrPotion)
+                                {
+                                    events.Add(new PickupPotionEvent(targetItem.Value, destinationLocation));
+                                }
+                                else
+                                {
+                                    return null;
+                                }
+                                break;
+                        }
+                    }
+                    else if (targetItem.Value.Type == ItemType.MonWithConsumable)
+                    {
+                        switch (destinationItem.Value.Type)
+                        {
+                            case ItemType.Mon:
+                            case ItemType.Mana:
+                            case ItemType.MonWithMana:
+                            case ItemType.MonWithConsumable:
+                                return null;
+                            case ItemType.Consumable:
+                                if (destinationItem.Value.Consumable == Consumable.BombOrPotion)
+                                {
+                                    events.Add(new PickupPotionEvent(targetItem.Value, destinationLocation));
+                                }
+                                else
+                                {
+                                    return null;
+                                }
+                                break;
+                        }
+                    }
+                    else if (targetItem.Value.Type == ItemType.Consumable)
+                    {
+                        var travellingConsumable = targetItem.Value.Consumable;
+                        switch (destinationItem.Value.Type)
+                        {
+                            case ItemType.Mana:
+                            case ItemType.Consumable:
+                                return null;
+                            case ItemType.Mon:
+                                forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectBomb), NextInputKind.SelectConsumable, destinationItem));
+                                forthInputOptions.Add(new NextInput(new Input.ModifierInput(Modifier.SelectPotion), NextInputKind.SelectConsumable, destinationItem));
+                                break;
+                            case ItemType.MonWithMana:
+                            case ItemType.MonWithConsumable:
+                                if (travellingConsumable == Consumable.BombOrPotion)
+                                {
+                                    events.Add(new PickupPotionEvent(destinationItem.Value, destinationLocation));
+                                }
+                                else
+                                {
+                                    return null;
+                                }
+                                break;
+                        }
+                    }
+
                 }
 
                 if (destinationSquare.Type == SquareType.ManaPool && targetItem.Value.ManaProperty.HasValue)
@@ -1037,8 +1124,9 @@ public partial class Game
 
                 case Event.EventType.MonFainted:
                     MonFaintedEvent monFaintedEvent = (MonFaintedEvent)@event;
-                    monFaintedEvent.Mon.Faint();
-                    Board.Put(Item.MonItem(monFaintedEvent.Mon), monFaintedEvent.To);
+                    var faintedMon = monFaintedEvent.Mon;
+                    faintedMon.Faint();
+                    Board.Put(Item.MonItem(faintedMon), monFaintedEvent.To);
                     break;
 
                 case Event.EventType.ManaDropped:
