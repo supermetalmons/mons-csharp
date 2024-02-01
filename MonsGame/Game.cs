@@ -55,63 +55,6 @@ public partial class Game
         TurnNumber = turnNumber;
     }
 
-    public Output ProcessInput(List<Input> inputs, bool doNotApplyEvents, bool oneOptionEnough)
-    {
-        if (WinnerColor(WhiteScore, BlackScore).HasValue) return new InvalidInputOutput();
-        if (!inputs.Any()) return SuggestedInputToStartWith();
-        if (!(inputs[0] is Input.LocationInput locationInput)) return new InvalidInputOutput();
-
-        var startLocation = locationInput.Location;
-        var startItem = Board.GetItem(startLocation);
-        if (startItem == null) return new InvalidInputOutput();
-
-        Input? specificSecondInput = inputs.Count > 1 ? inputs[1] : null;
-        var secondInputOptions = SecondInputOptions(startLocation, startItem.Value, oneOptionEnough, specificSecondInput);
-
-        if (specificSecondInput == null)
-        {
-            if (!secondInputOptions.Any())
-            {
-                return new InvalidInputOutput();
-            }
-            else
-            {
-                return new NextInputOptionsOutput(secondInputOptions);
-            }
-        }
-
-        if (!(specificSecondInput is Input.LocationInput targetLocationInput)) return new InvalidInputOutput();
-        var targetLocation = targetLocationInput.Location;
-        var secondInputKind = secondInputOptions.Select(opt => (NextInput?)opt).FirstOrDefault(opt => opt.HasValue && opt.Value.Input.Equals(specificSecondInput))?.Kind;
-        if (secondInputKind == null) return new InvalidInputOutput();
-        Input? specificThirdInput = inputs.Count > 2 ? inputs[2] : null;
-        var outputForSecondInput = ProcessSecondInput(secondInputKind.Value, startItem.Value, startLocation, targetLocation, specificThirdInput);
-        if (outputForSecondInput == null) return new InvalidInputOutput();
-        var thirdInputOptions = outputForSecondInput.Value.Item2;
-        var events = outputForSecondInput.Value.Item1;
-        if (specificThirdInput == null)
-        {
-            if (thirdInputOptions.Any())
-            {
-                return new NextInputOptionsOutput(thirdInputOptions);
-            }
-            else if (events.Any())
-            {
-                return new EventsOutput(events);
-            }
-            else
-            {
-                return new InvalidInputOutput();
-            }
-        }
-
-        // TODO: implement missing part
-
-        return new EventsOutput(events);
-    }
-
-    // MARK: - process step by step
-
     private Output SuggestedInputToStartWith()
     {
         Func<Location, Location?> locationsFilter = location =>
@@ -145,74 +88,353 @@ public partial class Game
         }
     }
 
-    private HashSet<NextInput> SecondInputOptions(Location startLocation, Item startItem, bool onlyOne, Input? specificNext)
+    public Output ProcessInput(List<Input> inputs, bool doNotApplyEvents, bool oneOptionEnough)
     {
-        Location? specificLocation = null;
-        if (specificNext is Input.LocationInput locationInput)
+        if (WinnerColor(WhiteScore, BlackScore).HasValue) return new InvalidInputOutput();
+        if (!inputs.Any()) return SuggestedInputToStartWith();
+        if (!(inputs[0] is Input.LocationInput locationInput)) return new InvalidInputOutput();
+
+        var startLocation = locationInput.Location;
+        var startItem = Board.GetItem(startLocation);
+        if (startItem == null) return new InvalidInputOutput();
+
+        Input? specificSecondInput = inputs.Count > 1 ? inputs[1] : null;
+        var secondInputOptions = SecondInputOptions(startLocation, startItem.Value, oneOptionEnough, specificSecondInput);
+
+        if (specificSecondInput == null)
         {
-            specificLocation = locationInput.Location;
+            if (!secondInputOptions.Any())
+            {
+                return new InvalidInputOutput();
+            }
+            else
+            {
+                return new NextInputOptionsOutput(secondInputOptions);
+            }
         }
 
-        var startSquare = Board.SquareAt(startLocation);
-        HashSet<NextInput> secondInputOptions = new HashSet<NextInput>();
+        if (!(specificSecondInput is Input.LocationInput targetLocationInput)) return new InvalidInputOutput();
+        var targetLocation = targetLocationInput.Location;
+        var secondInputKind = secondInputOptions.Select(opt => (NextInput?)opt).FirstOrDefault(opt => opt.HasValue && opt.Value.Input.Equals(specificSecondInput))?.Kind;
+        if (!secondInputKind.HasValue) return new InvalidInputOutput();
 
+        Input? specificThirdInput = inputs.Count > 2 ? inputs[2] : null;
+        var outputForSecondInput = ProcessSecondInput(secondInputKind.Value, startItem.Value, startLocation, targetLocation, specificThirdInput);
+        if (outputForSecondInput == null) return new InvalidInputOutput();
+        var thirdInputOptions = outputForSecondInput.Value.Item2;
+        var events = outputForSecondInput.Value.Item1;
+
+        if (specificThirdInput == null)
+        {
+            if (thirdInputOptions.Any())
+            {
+                return new NextInputOptionsOutput(thirdInputOptions);
+            }
+            else if (events.Any())
+            {
+                return new EventsOutput(doNotApplyEvents ? events : ApplyAndAddResultingEvents(events));
+            }
+            else
+            {
+                return new InvalidInputOutput();
+            }
+        }
+
+        var thirdInput = thirdInputOptions.Select(opt => (NextInput?)opt).FirstOrDefault(opt => opt.HasValue && opt.Value.Input.Equals(specificThirdInput));
+        if (thirdInput == null) return new InvalidInputOutput();
+
+        Input? specificFourthInput = inputs.Count > 3 ? inputs[3] : null;
+        var outputForThirdInput = ProcessThirdInput(thirdInput!.Value, startItem.Value, startLocation, targetLocation);
+        if (outputForThirdInput == null) return new InvalidInputOutput();
+        var fourthInputOptions = outputForThirdInput.Value.Item2;
+        events.AddRange(outputForThirdInput.Value.Item1);
+
+        if (specificFourthInput == null)
+        {
+            if (fourthInputOptions.Any())
+            {
+                return new NextInputOptionsOutput(fourthInputOptions);
+            }
+            else if (events.Any())
+            {
+                return new EventsOutput(doNotApplyEvents ? events : ApplyAndAddResultingEvents(events));
+            }
+            else
+            {
+                return new InvalidInputOutput();
+            }
+        }
+
+        if (!(specificFourthInput is Input.ModifierInput modifierInput)) return new InvalidInputOutput();
+        var fourthInput = fourthInputOptions.Select(opt => (NextInput?)opt).FirstOrDefault(opt => opt.HasValue && opt.Value.Input.Equals(specificFourthInput));
+        if (fourthInput == null || !(thirdInput.Value.Input is Input.LocationInput locationInputThird) || !fourthInput.Value.ActorMonItem.HasValue) return new InvalidInputOutput();
+
+        var destinationLocation = locationInputThird.Location;
+        var actorMonItem = fourthInput.Value.ActorMonItem.Value;
+        var actorMon = actorMonItem.MonProperty;
+        if (actorMon == null) return new InvalidInputOutput();
+
+        switch (modifierInput.Modifier)
+        {
+            case Modifier.SelectBomb:
+                events.Add(new PickupBombEvent(actorMon.Value, destinationLocation));
+                break;
+            case Modifier.SelectPotion:
+                events.Add(new PickupPotionEvent(actorMonItem, destinationLocation));
+                break;
+            case Modifier.Cancel:
+                return new InvalidInputOutput();
+        }
+
+        return new EventsOutput(doNotApplyEvents ? events : ApplyAndAddResultingEvents(events));
+    }
+
+
+    private List<NextInput> SecondInputOptions(Location startLocation, Item startItem, bool onlyOne, Input? specificNext)
+    {
+        Location? specificLocation = specificNext is Input.LocationInput locationInput ? locationInput.Location : (Location?)null;
+
+        var secondInputOptions = new List<NextInput>();
         switch (startItem.Type)
         {
             case ItemType.Mon:
                 var mon = startItem.Mon;
                 if (mon.color == ActiveColor && !mon.isFainted && PlayerCanMoveMon(MonsMovesCount))
                 {
-                    secondInputOptions.UnionWith(NextInputs(startLocation.NearbyLocations, NextInputKind.MonMove, onlyOne, specificLocation, location =>
+                    var possibleMoves = NextInputs(startLocation.NearbyLocations, NextInputKind.MonMove, onlyOne, specificLocation, location =>
                     {
                         var item = Board.GetItem(location);
                         var square = Board.SquareAt(location);
 
-                        return item switch
+                        if (item.HasValue)
                         {
-                            { Type: ItemType.Mon or ItemType.MonWithMana or ItemType.MonWithConsumable } => false,
-                            { Type: ItemType.Mana } => mon.kind != Mon.Kind.Drainer,
-                            { Type: ItemType.Consumable } => true,
-                            _ => square.Type switch
+                            switch (item.Value.Type)
                             {
-                                SquareType.Regular or SquareType.ConsumableBase or SquareType.ManaBase or SquareType.ManaPool => true,
-                                SquareType.SupermanaBase => item?.Mana.Type == ManaType.Supermana && mon.kind == Mon.Kind.Drainer,
-                                SquareType.MonBase => mon.kind == item?.MonProperty?.kind && mon.color == item?.MonProperty.Value.color,
-                                _ => false,
+                                case ItemType.Mon:
+                                case ItemType.MonWithMana:
+                                case ItemType.MonWithConsumable:
+                                    return false;
+                                case ItemType.Mana:
+                                    return mon.kind == Mon.Kind.Drainer;
+                                case ItemType.Consumable:
+                                    return true;
                             }
+                        }
+
+                        return square.Type switch
+                        {
+                            SquareType.Regular => true,
+                            SquareType.ConsumableBase => true,
+                            SquareType.ManaBase => true,
+                            SquareType.ManaPool => true,
+                            SquareType.SupermanaBase => item.HasValue && item.Value.ManaProperty.HasValue && item.Value.ManaProperty.Value.Type == ManaType.Supermana && mon.kind == Mon.Kind.Drainer,
+                            SquareType.MonBase => mon.kind == square.Kind && mon.color == square.Color,
+                            _ => false,
                         };
-                    }));
+                    });
+
+                    secondInputOptions.AddRange(possibleMoves);
 
                     if (onlyOne && secondInputOptions.Any()) return secondInputOptions;
                 }
+                
+                if (Board.SquareAt(startLocation).Type != SquareType.MonBase && PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount), ActionsUsedCount))
+                {
+                    switch (mon.kind)
+                    {
+                        case Mon.Kind.Mystic:
+                            var mysticActions = NextInputs(startLocation.ReachableByMysticAction, NextInputKind.MysticAction, onlyOne, specificLocation, location =>
+                            {
+                                var item = Board.GetItem(location);
+                                if (!item.HasValue || ProtectedByOpponentsAngel(Board, ActiveColor).Contains(location)) return false;
 
-                // Handling for Mystic, Demon, Spirit actions based on `mon.kind`
-                // This section would need significant adaptation to match C# syntax and logic flow.
+                                return item.Value.Type switch
+                                {
+                                    ItemType.Mon => item.Value.Mon.color != mon.color && !item.Value.Mon.isFainted,
+                                    _ => false,
+                                };
+                            });
+                            secondInputOptions.AddRange(mysticActions);
+                            break;
 
+                        case Mon.Kind.Demon:
+                            var demonActions = NextInputs(startLocation.ReachableByDemonAction, NextInputKind.DemonAction, onlyOne, specificLocation, location =>
+                            {
+                                var item = Board.GetItem(location);
+                                if (!item.HasValue || ProtectedByOpponentsAngel(Board, ActiveColor).Contains(location)) return false;
+
+                                var locationBetween = startLocation.LocationBetween(location);
+                                if (Board.GetItem(locationBetween).HasValue) return false;
+
+                                return item.Value.Type switch
+                                {
+                                    ItemType.Mon => item.Value.Mon.color != mon.color && !item.Value.Mon.isFainted,
+                                    _ => false,
+                                };
+                            });
+                            secondInputOptions.AddRange(demonActions);
+                            break;
+
+                        case Mon.Kind.Spirit:
+                            var spiritActions = NextInputs(startLocation.ReachableBySpiritAction, NextInputKind.SpiritTargetCapture, onlyOne, specificLocation, location =>
+                            {
+                                var item = Board.GetItem(location);
+                                if (!item.HasValue) return false;
+
+                                return item.Value.Type switch
+                                {
+                                    ItemType.Mon => !item.Value.Mon.isFainted,
+                                    _ => true,
+                                };
+                            });
+                            secondInputOptions.AddRange(spiritActions);
+                            break;
+                    }
+                }
                 break;
 
             case ItemType.Mana:
-                var mana = startItem.ManaProperty;
-                if (mana?.Color == ActiveColor && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
+                if (startItem.ManaProperty.HasValue && startItem.ManaProperty.Value.Color == ActiveColor && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
                 {
-                    secondInputOptions.UnionWith(NextInputs(startLocation.NearbyLocations, NextInputKind.ManaMove, onlyOne, specificLocation, location =>
+                    var mana = startItem.ManaProperty.Value;
+                    secondInputOptions.AddRange(NextInputs(startLocation.NearbyLocations, NextInputKind.ManaMove, onlyOne, specificLocation, location =>
                     {
                         var item = Board.GetItem(location);
                         var square = Board.SquareAt(location);
-                        return item switch
+
+                        if (item.HasValue)
                         {
-                            { Type: ItemType.Mon } => item?.MonProperty?.kind == Mon.Kind.Drainer,
-                            _ => square.Type switch
+                            switch (item.Value.Type)
                             {
-                                SquareType.Regular or SquareType.ConsumableBase or SquareType.ManaBase or SquareType.ManaPool => true,
-                                _ => false,
+                                case ItemType.Mon:
+                                    return item.Value.Mon.kind == Mon.Kind.Drainer;
+                                case ItemType.MonWithConsumable:
+                                case ItemType.Consumable:
+                                case ItemType.MonWithMana:
+                                case ItemType.Mana:
+                                    return false;
                             }
+                        }
+
+                        return square.Type switch
+                        {
+                            SquareType.Regular => true,
+                            SquareType.ConsumableBase => true,
+                            SquareType.ManaBase => true,
+                            SquareType.ManaPool => true,
+                            SquareType.SupermanaBase => false,
+                            SquareType.MonBase => false,
+                            _ => false,
                         };
                     }));
                 }
-
                 break;
 
-                // Additional cases for MonWithMana, MonWithConsumable, etc., following similar logic to the above cases.
+            case ItemType.MonWithMana:
+
+                if (startItem.MonProperty.HasValue && startItem.MonProperty.Value.color == ActiveColor && PlayerCanMoveMon(MonsMovesCount))
+                {
+                    var monWithMana = startItem.MonProperty.Value;
+                    secondInputOptions.AddRange(NextInputs(startLocation.NearbyLocations, NextInputKind.MonMove, onlyOne, specificLocation, location =>
+                    {
+                        var item = Board.GetItem(location);
+                        var square = Board.SquareAt(location);
+
+                        if (item.HasValue)
+                        {
+                            switch (item.Value.Type)
+                            {
+                                case ItemType.Mon:
+                                case ItemType.MonWithMana:
+                                case ItemType.MonWithConsumable:
+                                    return false;
+                                case ItemType.Consumable:
+                                case ItemType.Mana:
+                                    break;
+                            }
+                        }
+
+                        return square.Type switch
+                        {
+                            SquareType.Regular => true,
+                            SquareType.ConsumableBase => true,
+                            SquareType.ManaBase => true,
+                            SquareType.ManaPool => true,
+                            SquareType.SupermanaBase => startItem.ManaProperty.HasValue && startItem.ManaProperty.Value.Type == ManaType.Supermana || (item.HasValue && item.Value.ManaProperty.HasValue && item.Value.ManaProperty.Value.Type == ManaType.Supermana),
+                            SquareType.MonBase => false,
+                            _ => false,
+                        };
+                    }));
+                }
+                break;
+
+            case ItemType.MonWithConsumable:
+
+                if (startItem.MonProperty.HasValue && startItem.MonProperty.Value.color == ActiveColor)
+                {
+                    var monWithConsumable = startItem.MonProperty.Value;
+                    if (PlayerCanMoveMon(MonsMovesCount))
+                    {
+                        secondInputOptions.AddRange(NextInputs(startLocation.NearbyLocations, NextInputKind.MonMove, onlyOne, specificLocation, location =>
+                        {
+                            var item = Board.GetItem(location);
+                            var square = Board.SquareAt(location);
+
+                            if (item.HasValue)
+                            {
+                                switch (item.Value.Type)
+                                {
+                                    case ItemType.Mon:
+                                    case ItemType.Mana:
+                                    case ItemType.MonWithMana:
+                                    case ItemType.MonWithConsumable:
+                                        return false;
+                                    case ItemType.Consumable:
+                                        break;
+                                }
+                            }
+
+                            return square.Type switch
+                            {
+                                SquareType.Regular => true,
+                                SquareType.ConsumableBase => true,
+                                SquareType.ManaBase => true,
+                                SquareType.ManaPool => true,
+                                SquareType.SupermanaBase => false,
+                                SquareType.MonBase => false,
+                                _ => false,
+                            };
+                        }));
+
+                        if (onlyOne && secondInputOptions.Any()) return secondInputOptions;
+                    }
+
+                    if (startItem.ConsumableProperty.HasValue && startItem.ConsumableProperty.Value == Consumable.Bomb)
+                    {
+                        secondInputOptions.AddRange(NextInputs(startLocation.ReachableByBomb, NextInputKind.BombAttack, onlyOne, specificLocation, location =>
+                        {
+                            var item = Board.GetItem(location);
+                            if (!item.HasValue) return false;
+
+                            switch (item.Value.Type)
+                            {
+                                case ItemType.Mon:
+                                case ItemType.MonWithMana:
+                                case ItemType.MonWithConsumable:
+                                    return item.Value.Mon.color != monWithConsumable.color && !item.Value.Mon.isFainted;
+                                case ItemType.Consumable:
+                                case ItemType.Mana:
+                                    return false;
+                                default:
+                                    return true;
+                            }
+                        }));
+                    }
+                }
+                break;
+
+            case ItemType.Consumable:
+                return new List<NextInput>();
         }
 
         return secondInputOptions;
