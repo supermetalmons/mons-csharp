@@ -132,38 +132,27 @@ public class TestDataTests
             var newGame = Game.FromFen(testCase.FenBefore);
             var actualOutput = newGame.ProcessInput(testCase.Input, doNotApplyEvents: false, oneOptionEnough: false);
 
-            if (testCase.FenAfter.Trim() == newGame.Fen.Trim())
-            {
-                Console.WriteLine("FEN OK");
-            }
-            else
-            {
-                Console.WriteLine("FEN 🛑");
-                Console.WriteLine(jsonContent);
-                Console.WriteLine("\n⚠️actual:\n");
-                string serializedActualOutput = JsonSerializer.Serialize(actualOutput, JsonOptions.DefaultSerializerOptions);
+            Assert.Equal(testCase.FenAfter, newGame.Fen);
+
+            string serializedActualOutput = JsonSerializer.Serialize(actualOutput, JsonOptions.DefaultSerializerOptions);
+            string serializedExpectedOutput = JsonSerializer.Serialize(testCase.Output, JsonOptions.DefaultSerializerOptions);
+
+            JsonDocument actualDoc = JsonDocument.Parse(serializedActualOutput);
+            JsonDocument expectedDoc = JsonDocument.Parse(serializedExpectedOutput);
+
+            if (serializedActualOutput != serializedExpectedOutput) {
+                Console.WriteLine("\n🛑🛑🛑");
                 Console.WriteLine(serializedActualOutput);
-                Console.WriteLine(newGame.Fen);
-
-
-                for (int i = 0; i < Math.Min(testCase.FenAfter.Length, newGame.Fen.Length); i++)
-                {
-                    if (testCase.FenAfter[i] != newGame.Fen[i])
-                    {
-                        Console.WriteLine($"Difference at position {i}: '{testCase.FenAfter[i]}' vs '{newGame.Fen[i]}'");
-                    }
-                }
-                if (testCase.FenAfter.Length != newGame.Fen.Length)
-                {
-                    Console.WriteLine("Strings have different lengths.");
-                }
-
+                Console.WriteLine("\nvs.\n");
+                Console.WriteLine(serializedExpectedOutput);
+                Console.WriteLine("\n\n\n");
+            } else {
+                Console.WriteLine("\n✅✅✅" + serializedActualOutput + "\n\n\n");
             }
 
-            Console.WriteLine("\n\n");
+            
 
-            // Assert.Equal(testCase.FenAfter, newGame.Fen);
-            // TODO: validate output as well
+            // Assert.True(JsonElementEquals(expectedDoc.RootElement, actualDoc.RootElement), "JSON structures are not equal.");
         }
     }
 

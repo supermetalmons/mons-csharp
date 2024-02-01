@@ -250,8 +250,9 @@ public partial class Game
 
                                 return item.Value.Type switch
                                 {
-                                    ItemType.Mon => item.Value.Mon.color != mon.color && !item.Value.Mon.isFainted,
-                                    _ => false,
+                                    ItemType.Mon or ItemType.MonWithMana or ItemType.MonWithConsumable when item.Value.Mon.color == mon.color || item.Value.Mon.isFainted => false,
+                                    ItemType.Mana or ItemType.Consumable => false,
+                                    _ => true,
                                 };
                             });
                             secondInputOptions.AddRange(mysticActions);
