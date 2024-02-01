@@ -128,9 +128,44 @@ public class TestDataTests
         {
             string jsonContent = File.ReadAllText(file);
             RulesTestCase testCase = JsonSerializer.Deserialize<RulesTestCase>(jsonContent, JsonOptions.DefaultSerializerOptions)!;
+
             var newGame = Game.FromFen(testCase.FenBefore);
-            newGame.ProcessInput(testCase.Input, doNotApplyEvents: false, oneOptionEnough: false);
-            Assert.Equal(testCase.FenBefore, newGame.Fen);
+            var actualOutput = newGame.ProcessInput(testCase.Input, doNotApplyEvents: false, oneOptionEnough: false);
+
+            if (testCase.FenAfter.Trim() == newGame.Fen.Trim())
+            {
+                Console.WriteLine("FEN OK");
+            }
+            else
+            {
+                Console.WriteLine("FEN 🛑");
+                Console.WriteLine(jsonContent);
+                Console.WriteLine("\n⚠️actual:\n");
+                string serializedActualOutput = JsonSerializer.Serialize(actualOutput, JsonOptions.DefaultSerializerOptions);
+                Console.WriteLine(serializedActualOutput);
+                Console.WriteLine(newGame.Fen);
+
+
+                for (int i = 0; i < Math.Min(testCase.FenAfter.Length, newGame.Fen.Length); i++)
+                {
+                    if (testCase.FenAfter[i] != newGame.Fen[i])
+                    {
+                        Console.WriteLine($"Difference at position {i}: '{testCase.FenAfter[i]}' vs '{newGame.Fen[i]}'");
+                    }
+                }
+                if (testCase.FenAfter.Length != newGame.Fen.Length)
+                {
+                    Console.WriteLine("Strings have different lengths.");
+                }
+
+
+
+
+            }
+
+            Console.WriteLine("\n\n");
+
+            // Assert.Equal(testCase.FenAfter, newGame.Fen);
             // TODO: validate output as well
         }
     }

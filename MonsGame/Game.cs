@@ -956,7 +956,7 @@ public partial class Game
                     MonMoveEvent monMoveEvent = (MonMoveEvent)@event;
                     MonsMovesCount++;
                     Board.RemoveItem(monMoveEvent.From);
-                    Board.Put(Item.MonItem(monMoveEvent.Item.Mon), monMoveEvent.To);
+                    Board.Put(monMoveEvent.Item, monMoveEvent.To);
                     break;
 
                 case Event.EventType.ManaMove:
