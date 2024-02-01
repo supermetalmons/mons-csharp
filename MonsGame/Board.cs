@@ -69,7 +69,7 @@ public partial class Board
 
     public IEnumerable<Location> AllMonsLocations(Color color)
     {
-        return _items.Where(pair => pair.Value.Type == ItemType.Mon && pair.Value.Mon.color == color)
+        return _items.Where(pair => pair.Value.MonProperty?.color == color)
                      .Select(pair => pair.Key);
     }
 

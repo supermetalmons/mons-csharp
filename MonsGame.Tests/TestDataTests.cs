@@ -145,14 +145,16 @@ public class TestDataTests
                 Console.WriteLine(serializedActualOutput);
                 Console.WriteLine("\nvs.\n");
                 Console.WriteLine(serializedExpectedOutput);
+                Console.WriteLine(JsonSerializer.Serialize(testCase.Input, JsonOptions.DefaultSerializerOptions));
+                Console.WriteLine(testCase.FenAfter);
                 Console.WriteLine("\n\n\n");
             } else {
-                Console.WriteLine("\n✅✅✅" + serializedActualOutput + "\n\n\n");
+                // Console.WriteLine("\n✅✅✅" + serializedActualOutput + "\n\n\n");
             }
 
             
 
-            // Assert.True(JsonElementEquals(expectedDoc.RootElement, actualDoc.RootElement), "JSON structures are not equal.");
+            Assert.True(JsonElementEquals(expectedDoc.RootElement, actualDoc.RootElement), "JSON structures are not equal.");
         }
     }
 

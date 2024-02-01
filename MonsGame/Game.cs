@@ -73,7 +73,7 @@ public partial class Game
         };
 
         var suggestedLocations = Board.AllMonsLocations(ActiveColor).Select(locationsFilter).Where(l => l != null).Cast<Location>().ToList();
-        if ((!PlayerCanMoveMon(MonsMovesCount) && !PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount), ActionsUsedCount) || suggestedLocations.Count == 0) && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
+        if (((!PlayerCanMoveMon(MonsMovesCount) && !PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount), ActionsUsedCount)) || suggestedLocations.Count == 0) && PlayerCanMoveMana(TurnNumber, ManaMovesCount))
         {
             suggestedLocations.AddRange(Board.AllFreeRegularManaLocations(ActiveColor).Select(locationsFilter).Where(l => l != null).Cast<Location>());
         }
@@ -238,7 +238,7 @@ public partial class Game
                     if (onlyOne && secondInputOptions.Any()) return secondInputOptions;
                 }
 
-                if (Board.SquareAt(startLocation).Type != SquareType.MonBase && PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount), ActionsUsedCount))
+                if (mon.color == ActiveColor && !mon.isFainted && Board.SquareAt(startLocation).Type != SquareType.MonBase && PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount), ActionsUsedCount))
                 {
                     switch (mon.kind)
                     {
