@@ -69,7 +69,7 @@ public partial class Board
 
     public IEnumerable<Location> AllMonsLocations(Color color)
     {
-        return _items.Where(pair => pair.Value.MonProperty?.color == color)
+        return _items.Where(pair => pair.Value.MonProperty?.Color == color)
                      .Select(pair => pair.Key);
     }
 
@@ -83,8 +83,8 @@ public partial class Board
     {
         var baseLocation = Config.Squares
             .FirstOrDefault(pair => pair.Value.Type == SquareType.MonBase &&
-                                    pair.Value.Color == mon.color &&
-                                    pair.Value.Kind == mon.kind);
+                                    pair.Value.Color == mon.Color &&
+                                    pair.Value.Kind == mon.Kind);
 
         if (baseLocation.Equals(default(KeyValuePair<Location, Square>)))
         {
@@ -97,8 +97,8 @@ public partial class Board
     public IEnumerable<Location> FaintedMonsLocations(Color color)
     {
         return _items.Where(pair => (pair.Value.Type == ItemType.Mon || pair.Value.Type == ItemType.MonWithMana || pair.Value.Type == ItemType.MonWithConsumable) &&
-                                    pair.Value.Mon.color == color &&
-                                    pair.Value.Mon.isFainted)
+                                    pair.Value.Mon.Color == color &&
+                                    pair.Value.Mon.IsFainted)
                      .Select(pair => pair.Key);
     }
 
@@ -111,9 +111,9 @@ public partial class Board
     public Location? FindAwakeAngel(Color color)
     {
         var locationWithItem = _items.FirstOrDefault(pair => (pair.Value.Type == ItemType.Mon || pair.Value.Type == ItemType.MonWithConsumable) &&
-                                                             pair.Value.Mon.color == color &&
-                                                             pair.Value.Mon.kind == Mon.Kind.Angel &&
-                                                             !pair.Value.Mon.isFainted);
+                                                             pair.Value.Mon.Color == color &&
+                                                             pair.Value.Mon.Kind == MonKind.Angel &&
+                                                             !pair.Value.Mon.IsFainted);
         return locationWithItem.Key.Equals(default(Location)) ? null : locationWithItem.Key;
     }
 

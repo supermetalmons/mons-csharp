@@ -12,7 +12,7 @@ public class NextInputTests
     {
         var location = new Location(0, 0);
         var locationInput = new Input.LocationInput(location);
-        var mon = new Mon(Mon.Kind.Spirit, Color.White);
+        var mon = new Mon(MonKind.Spirit, Color.White);
         var item = Item.MonItem(mon);
 
         var nextInput = new NextInput(locationInput, kind, item);
@@ -27,7 +27,7 @@ public class NextInputTests
     {
         var location = new Location(1, 1);
         var locationInput = new Input.LocationInput(location);
-        var mon = new Mon(Mon.Kind.Spirit, Color.White);
+        var mon = new Mon(MonKind.Spirit, Color.White);
         var item = Item.MonItem(mon);
 
         var nextInput1 = new NextInput(locationInput, NextInputKind.MysticAction, item);
@@ -44,7 +44,7 @@ public class NextInputTests
         var locationInput1 = new Input.LocationInput(location1);
         var location2 = new Location(3, 3);
         var locationInput2 = new Input.LocationInput(location2);
-        var mon = new Mon(Mon.Kind.Spirit, Color.White);
+        var mon = new Mon(MonKind.Spirit, Color.White);
         var item = Item.MonItem(mon);
 
         var nextInput1 = new NextInput(locationInput1, NextInputKind.DemonAction, item);
@@ -59,7 +59,7 @@ public class NextInputTests
     {
         var location = new Location(4, 4);
         var locationInput = new Input.LocationInput(location);
-        var mon = new Mon(Mon.Kind.Spirit, Color.White);
+        var mon = new Mon(MonKind.Spirit, Color.White);
         var item = Item.MonItem(mon);
 
         var nextInput1 = new NextInput(locationInput, NextInputKind.SpiritTargetCapture, item);

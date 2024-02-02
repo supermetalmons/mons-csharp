@@ -8,7 +8,7 @@ public class ItemTests
     [Fact]
     public void MonItem_CreatesMonItemCorrectly()
     {
-        var mon = new Mon(Mon.Kind.Demon, Color.White);
+        var mon = new Mon(MonKind.Demon, Color.White);
         var item = Item.MonItem(mon);
 
         Assert.Equal(ItemType.Mon, item.Type);
@@ -32,7 +32,7 @@ public class ItemTests
     [Fact]
     public void MonProperty_ReturnsMonForMonItem()
     {
-        var mon = new Mon(Mon.Kind.Angel, Color.White);
+        var mon = new Mon(MonKind.Angel, Color.White);
         var item = Item.MonItem(mon);
 
         Assert.Equal(mon, item.MonProperty);
@@ -41,7 +41,7 @@ public class ItemTests
     [Fact]
     public void Equals_ReturnsTrueForEqualItems()
     {
-        var mon = new Mon(Mon.Kind.Demon, Color.Black);
+        var mon = new Mon(MonKind.Demon, Color.Black);
         var item1 = Item.MonItem(mon);
         var item2 = Item.MonItem(mon);
 
@@ -51,7 +51,7 @@ public class ItemTests
     [Fact]
     public void Equals_ReturnsFalseForDifferentItems()
     {
-        var mon = new Mon(Mon.Kind.Demon, Color.Black);
+        var mon = new Mon(MonKind.Demon, Color.Black);
         var mana = Mana.Regular(Color.White);
         var item1 = Item.MonItem(mon);
         var item2 = Item.ManaItem(mana);
@@ -62,7 +62,7 @@ public class ItemTests
     [Fact]
     public void EqualityOperators_WorkCorrectly()
     {
-        var mon = new Mon(Mon.Kind.Spirit, Color.White);
+        var mon = new Mon(MonKind.Spirit, Color.White);
         var item1 = Item.MonItem(mon);
         var item2 = Item.MonItem(mon);
         var item3 = Item.ManaItem(Mana.Regular(Color.Black));
@@ -76,7 +76,7 @@ public class ItemTests
     [Fact]
     public void GetHashCode_ReturnsSameValueForEqualObjects()
     {
-        var mon = new Mon(Mon.Kind.Demon, Color.White);
+        var mon = new Mon(MonKind.Demon, Color.White);
         var item1 = Item.MonItem(mon);
         var item2 = Item.MonItem(mon);
 

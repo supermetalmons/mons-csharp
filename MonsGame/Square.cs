@@ -16,9 +16,9 @@ public struct Square : IEquatable<Square>
 {
     public SquareType Type { get; private set; }
     public Color Color { get; private set; }
-    public Mon.Kind Kind { get; private set; }
+    public MonKind Kind { get; private set; }
 
-    private Square(SquareType type, Color color, Mon.Kind kind)
+    private Square(SquareType type, Color color, MonKind kind)
     {
         Type = type;
         Color = color;
@@ -30,7 +30,7 @@ public struct Square : IEquatable<Square>
     public static Square SupermanaBase => new(SquareType.SupermanaBase, default, default);
     public static Square ManaBase(Color color) => new(SquareType.ManaBase, color, default);
     public static Square ManaPool(Color color) => new(SquareType.ManaPool, color, default);
-    public static Square MonBase(Mon.Kind kind, Color color) => new(SquareType.MonBase, color, kind);
+    public static Square MonBase(MonKind kind, Color color) => new(SquareType.MonBase, color, kind);
 
     public override bool Equals(object? obj)
     {

@@ -126,18 +126,18 @@ public static class MonExtensions
 {
     public static string Fen(this Mon mon)
     {
-        var letter = mon.kind switch
+        var letter = mon.Kind switch
         {
-            Mon.Kind.Demon => "e",
-            Mon.Kind.Drainer => "d",
-            Mon.Kind.Angel => "a",
-            Mon.Kind.Spirit => "s",
-            Mon.Kind.Mystic => "y",
-            _ => throw new ArgumentOutOfRangeException(nameof(mon.kind), mon.kind, null)
+            MonKind.Demon => "e",
+            MonKind.Drainer => "d",
+            MonKind.Angel => "a",
+            MonKind.Spirit => "s",
+            MonKind.Mystic => "y",
+            _ => throw new ArgumentOutOfRangeException(nameof(mon.Kind), mon.Kind, null)
         };
 
-        var cooldown = mon.cooldown % 10;
-        return (mon.color == Color.White ? letter.ToUpper() : letter) + cooldown.ToString();
+        var cooldown = mon.Cooldown % 10;
+        return (mon.Color == Color.White ? letter.ToUpper() : letter) + cooldown.ToString();
     }
 
     public static Mon? FromFen(string fen)
@@ -147,14 +147,14 @@ public static class MonExtensions
             return null;
         }
 
-        Mon.Kind kind;
+        MonKind kind;
         switch (fen[0].ToString().ToLower())
         {
-            case "e": kind = Mon.Kind.Demon; break;
-            case "d": kind = Mon.Kind.Drainer; break;
-            case "a": kind = Mon.Kind.Angel; break;
-            case "s": kind = Mon.Kind.Spirit; break;
-            case "y": kind = Mon.Kind.Mystic; break;
+            case "e": kind = MonKind.Demon; break;
+            case "d": kind = MonKind.Drainer; break;
+            case "a": kind = MonKind.Angel; break;
+            case "s": kind = MonKind.Spirit; break;
+            case "y": kind = MonKind.Mystic; break;
             default: return null;
         }
 

@@ -12,7 +12,7 @@ public class SquareTests
 
         Assert.Equal(SquareType.Regular, square.Type);
         Assert.Equal(default(Color), square.Color);
-        Assert.Equal(default(Mon.Kind), square.Kind);
+        Assert.Equal(default(MonKind), square.Kind);
     }
 
     [Fact]
@@ -22,7 +22,7 @@ public class SquareTests
 
         Assert.Equal(SquareType.ConsumableBase, square.Type);
         Assert.Equal(default(Color), square.Color);
-        Assert.Equal(default(Mon.Kind), square.Kind);
+        Assert.Equal(default(MonKind), square.Kind);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class SquareTests
 
         Assert.Equal(SquareType.SupermanaBase, square.Type);
         Assert.Equal(default(Color), square.Color);
-        Assert.Equal(default(Mon.Kind), square.Kind);
+        Assert.Equal(default(MonKind), square.Kind);
     }
 
     [Theory]
@@ -44,7 +44,7 @@ public class SquareTests
 
         Assert.Equal(SquareType.ManaBase, square.Type);
         Assert.Equal(color, square.Color);
-        Assert.Equal(default(Mon.Kind), square.Kind);
+        Assert.Equal(default(MonKind), square.Kind);
     }
 
     [Theory]
@@ -56,13 +56,13 @@ public class SquareTests
 
         Assert.Equal(SquareType.ManaPool, square.Type);
         Assert.Equal(color, square.Color);
-        Assert.Equal(default(Mon.Kind), square.Kind);
+        Assert.Equal(default(MonKind), square.Kind);
     }
 
     [Theory]
-    [InlineData(Mon.Kind.Demon, Color.White)]
-    [InlineData(Mon.Kind.Angel, Color.Black)]
-    public void MonBase_CreatesMonBaseSquare(Mon.Kind kind, Color color)
+    [InlineData(MonKind.Demon, Color.White)]
+    [InlineData(MonKind.Angel, Color.Black)]
+    public void MonBase_CreatesMonBaseSquare(MonKind kind, Color color)
     {
         var square = Square.MonBase(kind, color);
 
@@ -74,8 +74,8 @@ public class SquareTests
     [Fact]
     public void Equals_ReturnsTrueForEqualSquares()
     {
-        var square1 = Square.MonBase(Mon.Kind.Demon, Color.White);
-        var square2 = Square.MonBase(Mon.Kind.Demon, Color.White);
+        var square1 = Square.MonBase(MonKind.Demon, Color.White);
+        var square2 = Square.MonBase(MonKind.Demon, Color.White);
 
         Assert.True(square1.Equals(square2));
     }
@@ -83,7 +83,7 @@ public class SquareTests
     [Fact]
     public void Equals_ReturnsFalseForDifferentSquares()
     {
-        var square1 = Square.MonBase(Mon.Kind.Demon, Color.White);
+        var square1 = Square.MonBase(MonKind.Demon, Color.White);
         var square2 = Square.ManaBase(Color.Black);
 
         Assert.False(square1.Equals(square2));

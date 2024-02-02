@@ -5,10 +5,8 @@ namespace MonsGame;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-public struct Mon : IEquatable<Mon>
-{
-    [JsonConverter(typeof(MonKindJsonConverter))]
-    public enum Kind
+[JsonConverter(typeof(MonKindJsonConverter))]
+    public enum MonKind
     {
         Demon,
         Drainer,
@@ -17,22 +15,24 @@ public struct Mon : IEquatable<Mon>
         Mystic
     }
 
-    public Color color { get; set; }
+public struct Mon : IEquatable<Mon>
+{
+    public Color Color { get; set; }
     private int _cooldown;
-    public int cooldown
+    public int Cooldown
     {
         get => _cooldown;
         private set => _cooldown = value;
     }
-    public Kind kind { get; set; }
+    public MonKind Kind { get; set; }
 
     [JsonIgnore]
-    public bool isFainted => cooldown > 0;
+    public bool IsFainted => Cooldown > 0;
 
-    public Mon(Kind kind, Color color, int cooldown = 0)
+    public Mon(MonKind kind, Color color, int cooldown = 0)
     {
-        this.kind = kind;
-        this.color = color;
+        this.Kind = kind;
+        this.Color = color;
         _cooldown = cooldown;
     }
 
@@ -61,12 +61,12 @@ public struct Mon : IEquatable<Mon>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(kind, color, _cooldown);
+        return HashCode.Combine(Kind, Color, _cooldown);
     }
 
     public static bool operator ==(Mon left, Mon right)
     {
-        return left.kind == right.kind && left.color == right.color && left._cooldown == right._cooldown;
+        return left.Kind == right.Kind && left.Color == right.Color && left._cooldown == right._cooldown;
     }
 
     public static bool operator !=(Mon left, Mon right)
@@ -75,15 +75,15 @@ public struct Mon : IEquatable<Mon>
     }
 }
 
-public class MonKindJsonConverter : JsonConverter<Mon.Kind>
+public class MonKindJsonConverter : JsonConverter<MonKind>
 {
-    public override Mon.Kind Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override MonKind Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         string value = reader.GetString()!;
-        return Enum.TryParse<Mon.Kind>(value, true, out var result) ? result : throw new JsonException($"Value '{value}' is not valid for enum type {nameof(Mon.Kind)}.");
+        return Enum.TryParse<MonKind>(value, true, out var result) ? result : throw new JsonException($"Value '{value}' is not valid for enum type {nameof(Mon.Kind)}.");
     }
 
-    public override void Write(Utf8JsonWriter writer, Mon.Kind value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, MonKind value, JsonSerializerOptions options)
     {
         writer.WriteStringValue(value.ToString().LowercaseFirst());
     }

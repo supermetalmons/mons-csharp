@@ -199,7 +199,7 @@ public partial class Game
         {
             case ItemType.Mon:
                 var mon = startItem.Mon;
-                if (mon.color == ActiveColor && !mon.isFainted && PlayerCanMoveMon(MonsMovesCount))
+                if (mon.Color == ActiveColor && !mon.IsFainted && PlayerCanMoveMon(MonsMovesCount))
                 {
                     var possibleMoves = NextInputs(startLocation.NearbyLocations, NextInputKind.MonMove, onlyOne, specificLocation, location =>
                     {
@@ -215,7 +215,7 @@ public partial class Game
                                 case ItemType.MonWithConsumable:
                                     return false;
                                 case ItemType.Mana:
-                                    return mon.kind == Mon.Kind.Drainer;
+                                    return mon.Kind == MonKind.Drainer;
                                 case ItemType.Consumable:
                                     return true;
                             }
@@ -227,8 +227,8 @@ public partial class Game
                             SquareType.ConsumableBase => true,
                             SquareType.ManaBase => true,
                             SquareType.ManaPool => true,
-                            SquareType.SupermanaBase => item.HasValue && item.Value.ManaProperty.HasValue && item.Value.ManaProperty.Value.Type == ManaType.Supermana && mon.kind == Mon.Kind.Drainer,
-                            SquareType.MonBase => mon.kind == square.Kind && mon.color == square.Color,
+                            SquareType.SupermanaBase => item.HasValue && item.Value.ManaProperty.HasValue && item.Value.ManaProperty.Value.Type == ManaType.Supermana && mon.Kind == MonKind.Drainer,
+                            SquareType.MonBase => mon.Kind == square.Kind && mon.Color == square.Color,
                             _ => false,
                         };
                     });
@@ -238,11 +238,11 @@ public partial class Game
                     if (onlyOne && secondInputOptions.Any()) return secondInputOptions;
                 }
 
-                if (mon.color == ActiveColor && !mon.isFainted && Board.SquareAt(startLocation).Type != SquareType.MonBase && PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount), ActionsUsedCount))
+                if (mon.Color == ActiveColor && !mon.IsFainted && Board.SquareAt(startLocation).Type != SquareType.MonBase && PlayerCanUseAction(TurnNumber, PlayerPotionsCount(ActiveColor, WhitePotionsCount, BlackPotionsCount), ActionsUsedCount))
                 {
-                    switch (mon.kind)
+                    switch (mon.Kind)
                     {
-                        case Mon.Kind.Mystic:
+                        case MonKind.Mystic:
                             var mysticActions = NextInputs(startLocation.ReachableByMysticAction, NextInputKind.MysticAction, onlyOne, specificLocation, location =>
                             {
                                 var item = Board.GetItem(location);
@@ -250,7 +250,7 @@ public partial class Game
 
                                 return item.Value.Type switch
                                 {
-                                    ItemType.Mon or ItemType.MonWithMana or ItemType.MonWithConsumable when item.Value.Mon.color == mon.color || item.Value.Mon.isFainted => false,
+                                    ItemType.Mon or ItemType.MonWithMana or ItemType.MonWithConsumable when item.Value.Mon.Color == mon.Color || item.Value.Mon.IsFainted => false,
                                     ItemType.Mana or ItemType.Consumable => false,
                                     _ => true,
                                 };
@@ -258,7 +258,7 @@ public partial class Game
                             secondInputOptions.AddRange(mysticActions);
                             break;
 
-                        case Mon.Kind.Demon:
+                        case MonKind.Demon:
                             var demonActions = NextInputs(startLocation.ReachableByDemonAction, NextInputKind.DemonAction, onlyOne, specificLocation, location =>
                             {
                                 var item = Board.GetItem(location);
@@ -269,9 +269,9 @@ public partial class Game
 
                                 return item.Value.Type switch
                                 {
-                                    ItemType.Mon => item.Value.MonProperty.HasValue && item.Value.MonProperty.Value.color != mon.color && !item.Value.MonProperty.Value.isFainted,
-                                    ItemType.MonWithMana => item.Value.MonProperty.HasValue && item.Value.MonProperty.Value.color != mon.color && !item.Value.MonProperty.Value.isFainted,
-                                    ItemType.MonWithConsumable => item.Value.MonProperty.HasValue && item.Value.MonProperty.Value.color != mon.color && !item.Value.MonProperty.Value.isFainted,
+                                    ItemType.Mon => item.Value.MonProperty.HasValue && item.Value.MonProperty.Value.Color != mon.Color && !item.Value.MonProperty.Value.IsFainted,
+                                    ItemType.MonWithMana => item.Value.MonProperty.HasValue && item.Value.MonProperty.Value.Color != mon.Color && !item.Value.MonProperty.Value.IsFainted,
+                                    ItemType.MonWithConsumable => item.Value.MonProperty.HasValue && item.Value.MonProperty.Value.Color != mon.Color && !item.Value.MonProperty.Value.IsFainted,
                                     _ => false,
                                 };
 
@@ -279,7 +279,7 @@ public partial class Game
                             secondInputOptions.AddRange(demonActions);
                             break;
 
-                        case Mon.Kind.Spirit:
+                        case MonKind.Spirit:
                             var spiritActions = NextInputs(startLocation.ReachableBySpiritAction, NextInputKind.SpiritTargetCapture, onlyOne, specificLocation, location =>
                             {
                                 var item = Board.GetItem(location);
@@ -287,7 +287,7 @@ public partial class Game
 
                                 return item.Value.Type switch
                                 {
-                                    ItemType.Mon => !item.Value.Mon.isFainted,
+                                    ItemType.Mon => !item.Value.Mon.IsFainted,
                                     _ => true,
                                 };
                             });
@@ -311,7 +311,7 @@ public partial class Game
                             switch (item.Value.Type)
                             {
                                 case ItemType.Mon:
-                                    return item.Value.Mon.kind == Mon.Kind.Drainer;
+                                    return item.Value.Mon.Kind == MonKind.Drainer;
                                 case ItemType.MonWithConsumable:
                                 case ItemType.Consumable:
                                 case ItemType.MonWithMana:
@@ -336,7 +336,7 @@ public partial class Game
 
             case ItemType.MonWithMana:
 
-                if (startItem.MonProperty.HasValue && startItem.MonProperty.Value.color == ActiveColor && PlayerCanMoveMon(MonsMovesCount))
+                if (startItem.MonProperty.HasValue && startItem.MonProperty.Value.Color == ActiveColor && PlayerCanMoveMon(MonsMovesCount))
                 {
                     var monWithMana = startItem.MonProperty.Value;
                     secondInputOptions.AddRange(NextInputs(startLocation.NearbyLocations, NextInputKind.MonMove, onlyOne, specificLocation, location =>
@@ -374,7 +374,7 @@ public partial class Game
 
             case ItemType.MonWithConsumable:
 
-                if (startItem.MonProperty.HasValue && startItem.MonProperty.Value.color == ActiveColor)
+                if (startItem.MonProperty.HasValue && startItem.MonProperty.Value.Color == ActiveColor)
                 {
                     var monWithConsumable = startItem.MonProperty.Value;
                     if (PlayerCanMoveMon(MonsMovesCount))
@@ -425,7 +425,7 @@ public partial class Game
                                 case ItemType.Mon:
                                 case ItemType.MonWithMana:
                                 case ItemType.MonWithConsumable:
-                                    return item.Value.Mon.color != monWithConsumable.color && !item.Value.Mon.isFainted;
+                                    return item.Value.Mon.Color != monWithConsumable.Color && !item.Value.Mon.IsFainted;
                                 case ItemType.Consumable:
                                 case ItemType.Mana:
                                     return false;
@@ -682,7 +682,7 @@ public partial class Game
                                 isEligibleLocation = true;
                                 break;
                             case SquareType.MonBase:
-                                isEligibleLocation = (startDemonMon.kind == square.Kind && startDemonMon.color == square.Color);
+                                isEligibleLocation = (startDemonMon.Kind == square.Kind && startDemonMon.Color == square.Color);
                                 break;
                             case SquareType.SupermanaBase:
                                 isEligibleLocation = false;
@@ -715,7 +715,7 @@ public partial class Game
                                 {
                                     continue;
                                 }
-                                if (targetItem.Value.Type == ItemType.Mana && (destinationMon.kind != Mon.Kind.Drainer || destinationMon.isFainted))
+                                if (targetItem.Value.Type == ItemType.Mana && (destinationMon.Kind != MonKind.Drainer || destinationMon.IsFainted))
                                 {
                                     continue;
                                 }
@@ -726,7 +726,7 @@ public partial class Game
                                 break;
 
                             case ItemType.Mana:
-                                if (targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.kind != Mon.Kind.Drainer || targetItem.Value.Mon.isFainted)
+                                if (targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.Kind != MonKind.Drainer || targetItem.Value.Mon.IsFainted)
                                 {
                                     continue;
                                 }
@@ -768,8 +768,8 @@ public partial class Game
                         SquareType.ConsumableBase => true,
                         SquareType.ManaBase => true,
                         SquareType.ManaPool => true,
-                        SquareType.SupermanaBase => (targetItem.Value.Type == ItemType.Mana && targetItem.Value.Mana.Type == ManaType.Supermana) || (targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.kind == Mon.Kind.Drainer && destinationItem.HasValue && destinationItem.Value.ManaProperty.HasValue && destinationItem.Value.ManaProperty.Value.Type == ManaType.Supermana),
-                        SquareType.MonBase => targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.kind == destinationSquare.Kind && targetItem.Value.Mon.color == destinationSquare.Color && !targetItem.Value.ManaProperty.HasValue && !targetItem.Value.ConsumableProperty.HasValue,
+                        SquareType.SupermanaBase => (targetItem.Value.Type == ItemType.Mana && targetItem.Value.Mana.Type == ManaType.Supermana) || (targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.Kind == MonKind.Drainer && destinationItem.HasValue && destinationItem.Value.ManaProperty.HasValue && destinationItem.Value.ManaProperty.Value.Type == ManaType.Supermana),
+                        SquareType.MonBase => targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.Kind == destinationSquare.Kind && targetItem.Value.Mon.Color == destinationSquare.Color && !targetItem.Value.ManaProperty.HasValue && !targetItem.Value.ConsumableProperty.HasValue,
                         _ => false,
                     };
 
@@ -1104,11 +1104,11 @@ public partial class Game
 
                 case Event.EventType.PickupPotion:
                     PickupPotionEvent pickupPotionEvent = (PickupPotionEvent)@event;
-                    if (pickupPotionEvent.By.MonProperty?.color == Color.Black)
+                    if (pickupPotionEvent.By.MonProperty?.Color == Color.Black)
                     {
                         BlackPotionsCount++;
                     }
-                    else if (pickupPotionEvent.By.MonProperty?.color == Color.White)
+                    else if (pickupPotionEvent.By.MonProperty?.Color == Color.White)
                     {
                         WhitePotionsCount++;
                     }
@@ -1176,7 +1176,7 @@ public partial class Game
                 {
                     mon.DecreaseCooldown();
                     Board.Put(Item.MonItem(mon), monLocation);
-                    if (!mon.isFainted)
+                    if (!mon.IsFainted)
                     {
                         extraEvents.Add(new MonAwakeEvent(mon, monLocation));
                     }
