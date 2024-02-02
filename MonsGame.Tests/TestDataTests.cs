@@ -73,7 +73,7 @@ public class TestDataTests
             string jsonContent = File.ReadAllText(file);
             RulesTestCase testCase = JsonSerializer.Deserialize<RulesTestCase>(jsonContent, JsonOptions.DefaultSerializerOptions)!;
             var newGame = Game.FromFen(testCase.FenBefore);
-            var actualOutput = newGame.ProcessInput(testCase.Input, doNotApplyEvents: false, oneOptionEnough: false);
+            var actualOutput = newGame.ProcessInput(testCase.Input);
             string serializedActualOutput = JsonSerializer.Serialize(actualOutput, JsonOptions.DefaultSerializerOptions);
             string serializedExpectedOutput = JsonSerializer.Serialize(testCase.Output, JsonOptions.DefaultSerializerOptions);
             JsonDocument actualDoc = JsonDocument.Parse(serializedActualOutput);

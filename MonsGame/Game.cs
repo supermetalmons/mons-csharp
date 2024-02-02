@@ -88,9 +88,9 @@ public partial class Game
         }
     }
 
-    public Output ProcessInput(List<Input> inputs, bool doNotApplyEvents, bool oneOptionEnough)
+    public Output ProcessInput(List<Input> inputs, bool doNotApplyEvents = false, bool oneOptionEnough = false)
     {
-        if (WinnerColor(WhiteScore, BlackScore).HasValue) return new InvalidInputOutput();
+        if (WinnerColor().HasValue) return new InvalidInputOutput();
         if (!inputs.Any()) return SuggestedInputToStartWith();
         if (!(inputs[0] is Input.LocationInput locationInput)) return new InvalidInputOutput();
 
@@ -1155,9 +1155,9 @@ public partial class Game
             }
         }
 
-        if (WinnerColor(WhiteScore, BlackScore) != null)
+        if (WinnerColor() != null)
         {
-            extraEvents.Add(new GameOverEvent(WinnerColor(WhiteScore, BlackScore)!.Value));
+            extraEvents.Add(new GameOverEvent(WinnerColor()!.Value));
         }
         else if ((IsFirstTurn(TurnNumber) && !PlayerCanMoveMon(MonsMovesCount)) ||
                  (!IsFirstTurn(TurnNumber) && !PlayerCanMoveMana(TurnNumber, ManaMovesCount)) ||
@@ -1189,7 +1189,7 @@ public partial class Game
 
     // MARK: - helpers
 
-    public List<NextInput> NextInputs(IEnumerable<Location> locations, NextInputKind kind, bool onlyOne, Location? specific, Func<Location, bool> filter)
+    private List<NextInput> NextInputs(IEnumerable<Location> locations, NextInputKind kind, bool onlyOne, Location? specific, Func<Location, bool> filter)
     {
         var inputs = new List<NextInput>();
         if (specific != null)
@@ -1240,13 +1240,13 @@ public partial class Game
         return moves;
     }
 
-    public Color? WinnerColor(int whiteScore, int blackScore)
+    public Color? WinnerColor()
     {
-        if (whiteScore >= Config.TargetScore)
+        if (WhiteScore >= Config.TargetScore)
         {
             return Color.White;
         }
-        else if (blackScore >= Config.TargetScore)
+        else if (BlackScore >= Config.TargetScore)
         {
             return Color.Black;
         }
@@ -1256,20 +1256,20 @@ public partial class Game
         }
     }
 
-    public bool IsFirstTurn(int turnNumber) => turnNumber == 1;
+    private bool IsFirstTurn(int turnNumber) => turnNumber == 1;
 
-    public int PlayerPotionsCount(Color activeColor, int whitePotionsCount, int blackPotionsCount)
+    private int PlayerPotionsCount(Color activeColor, int whitePotionsCount, int blackPotionsCount)
         => activeColor == Color.White ? whitePotionsCount : blackPotionsCount;
 
-    public bool PlayerCanMoveMon(int monsMovesCount) => monsMovesCount < Config.MonsMovesPerTurn;
+    private bool PlayerCanMoveMon(int monsMovesCount) => monsMovesCount < Config.MonsMovesPerTurn;
 
-    public bool PlayerCanMoveMana(int turnNumber, int manaMovesCount)
+    private bool PlayerCanMoveMana(int turnNumber, int manaMovesCount)
         => turnNumber != 1 && manaMovesCount < Config.ManaMovesPerTurn;
 
-    public bool PlayerCanUseAction(int turnNumber, int playerPotionsCount, int actionsUsedCount)
+    private bool PlayerCanUseAction(int turnNumber, int playerPotionsCount, int actionsUsedCount)
         => turnNumber != 1 && (playerPotionsCount > 0 || actionsUsedCount < Config.ActionsPerTurn);
 
-    public HashSet<Location> ProtectedByOpponentsAngel(Board board, Color activeColor)
+    private HashSet<Location> ProtectedByOpponentsAngel(Board board, Color activeColor)
     {
         var protectedLocations = new HashSet<Location>();
         var angelLocation = board.FindAwakeAngel(activeColor.Other());
