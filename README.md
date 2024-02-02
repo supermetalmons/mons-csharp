@@ -1,3 +1,5 @@
+`dotnet add package MonsGame`
+
 ```csharp
 using MonsGame;
 
