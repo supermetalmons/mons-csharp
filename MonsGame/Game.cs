@@ -711,26 +711,26 @@ public partial class Game
                         {
                             case ItemType.Mon:
                                 var destinationMon = destinationItem.Value.Mon;
-                                if (targetItem.Value.Type == ItemType.Mon || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.MonWithConsumable)
+                                if (targetItem?.Type == ItemType.Mon || targetItem?.Type == ItemType.MonWithMana || targetItem?.Type == ItemType.MonWithConsumable)
                                 {
                                     continue;
                                 }
-                                if (targetItem.Value.Type == ItemType.Mana && (destinationMon.Kind != MonKind.Drainer || destinationMon.IsFainted))
+                                if (targetItem?.Type == ItemType.Mana && (destinationMon.Kind != MonKind.Drainer || destinationMon.IsFainted))
                                 {
                                     continue;
                                 }
-                                if (targetItem.Value.Type == ItemType.Consumable && targetItem.Value.Consumable != Consumable.BombOrPotion)
+                                if (targetItem?.Type == ItemType.Consumable && targetItem?.Consumable != Consumable.BombOrPotion)
                                 {
                                     continue;
                                 }
                                 break;
 
                             case ItemType.Mana:
-                                if (targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.Kind != MonKind.Drainer || targetItem.Value.Mon.IsFainted)
+                                if (targetItem?.Type == ItemType.Mon && targetItem.Value.Mon.Kind != MonKind.Drainer || targetItem?.Mon.IsFainted == true)
                                 {
                                     continue;
                                 }
-                                if (targetItem.Value.Type == ItemType.Consumable || targetItem.Value.Type == ItemType.MonWithConsumable || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.Mana)
+                                if (targetItem?.Type == ItemType.Consumable || targetItem?.Type == ItemType.MonWithConsumable || targetItem?.Type == ItemType.MonWithMana || targetItem?.Type == ItemType.Mana)
                                 {
                                     continue;
                                 }
@@ -738,11 +738,11 @@ public partial class Game
 
                             case ItemType.MonWithMana:
                             case ItemType.MonWithConsumable:
-                                if (targetItem.Value.Type == ItemType.Consumable && targetItem.Value.Consumable != Consumable.BombOrPotion)
+                                if (targetItem?.Type == ItemType.Consumable && targetItem.Value.Consumable != Consumable.BombOrPotion)
                                 {
                                     continue;
                                 }
-                                if (targetItem.Value.Type == ItemType.Mon || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.MonWithConsumable || targetItem.Value.Type == ItemType.Mana)
+                                if (targetItem?.Type == ItemType.Mon || targetItem?.Type == ItemType.MonWithMana || targetItem?.Type == ItemType.MonWithConsumable || targetItem?.Type == ItemType.Mana)
                                 {
                                     continue;
                                 }
@@ -750,11 +750,11 @@ public partial class Game
 
                             case ItemType.Consumable:
                                 var destinationConsumable = destinationItem.Value.ConsumableProperty;
-                                if ((targetItem.Value.Type == ItemType.Mon || targetItem.Value.Type == ItemType.MonWithMana || targetItem.Value.Type == ItemType.MonWithConsumable) && destinationConsumable != Consumable.BombOrPotion)
+                                if ((targetItem?.Type == ItemType.Mon || targetItem?.Type == ItemType.MonWithMana || targetItem?.Type == ItemType.MonWithConsumable) && destinationConsumable != Consumable.BombOrPotion)
                                 {
                                     continue;
                                 }
-                                if (targetItem.Value.Type == ItemType.Mana || targetItem.Value.Type == ItemType.Consumable)
+                                if (targetItem?.Type == ItemType.Mana || targetItem?.Type == ItemType.Consumable)
                                 {
                                     continue;
                                 }
@@ -768,8 +768,8 @@ public partial class Game
                         SquareType.ConsumableBase => true,
                         SquareType.ManaBase => true,
                         SquareType.ManaPool => true,
-                        SquareType.SupermanaBase => (targetItem.Value.Type == ItemType.Mana && targetItem.Value.Mana.Type == ManaType.Supermana) || (targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.Kind == MonKind.Drainer && destinationItem.HasValue && destinationItem.Value.ManaProperty.HasValue && destinationItem.Value.ManaProperty.Value.Type == ManaType.Supermana),
-                        SquareType.MonBase => targetItem.Value.Type == ItemType.Mon && targetItem.Value.Mon.Kind == destinationSquare.Kind && targetItem.Value.Mon.Color == destinationSquare.Color && !targetItem.Value.ManaProperty.HasValue && !targetItem.Value.ConsumableProperty.HasValue,
+                        SquareType.SupermanaBase => (targetItem?.ManaProperty?.Type == ManaType.Supermana) || (targetItem?.MonProperty?.Kind == MonKind.Drainer && destinationItem?.ManaProperty?.Type == ManaType.Supermana),
+                        SquareType.MonBase => targetItem?.MonProperty?.Kind == destinationSquare.Kind && targetItem?.MonProperty?.Color == destinationSquare.Color && !targetItem.Value.ManaProperty.HasValue && !targetItem.Value.ConsumableProperty.HasValue,
                         _ => false,
                     };
 
